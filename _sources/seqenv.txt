@@ -1,0 +1,39 @@
+seqenv package
+==============
+
+Subpackages
+-----------
+
+.. toctree::
+
+    seqenv.common
+    seqenv.fasta
+    seqenv.seqsearch
+
+Submodules
+----------
+
+seqenv.analysis module
+----------------------
+
+.. automodule:: seqenv.analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.outputs module
+---------------------
+
+.. automodule:: seqenv.outputs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: seqenv
+    :members:
+    :undoc-members:
+    :show-inheritance:

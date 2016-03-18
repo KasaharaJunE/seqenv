@@ -1,0 +1,235 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.fasta package &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="index.html" />
+    <link rel="up" title="seqenv package" href="seqenv.html" />
+    <link rel="next" title="seqenv.seqsearch package" href="seqenv.seqsearch.html" />
+    <link rel="prev" title="seqenv.common package" href="seqenv.common.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="seqenv-fasta-package">
+<h1>seqenv.fasta package<a class="headerlink" href="#seqenv-fasta-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-seqenv.fasta.splitable">
+<span id="seqenv-fasta-splitable-module"></span><h2>seqenv.fasta.splitable module<a class="headerlink" href="#module-seqenv.fasta.splitable" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.fasta.splitable.SplitableFASTA">
+<em class="property">class </em><code class="descclassname">seqenv.fasta.splitable.</code><code class="descname">SplitableFASTA</code><span class="sig-paren">(</span><em>path</em>, <em>num_parts=None</em>, <em>part_size=None</em>, <em>base_dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta/splitable.html#SplitableFASTA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.splitable.SplitableFASTA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seqenv.fasta.FASTA" title="seqenv.fasta.FASTA"><code class="xref py py-class docutils literal"><span class="pre">seqenv.fasta.FASTA</span></code></a></p>
+<p>A FASTA file which you can split into chunks. Either you give the number
+of parts you want to generate, or you can give a target size in bytes for
+each part.</p>
+<dl class="method">
+<dt id="seqenv.fasta.splitable.SplitableFASTA.split">
+<code class="descname">split</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta/splitable.html#SplitableFASTA.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.splitable.SplitableFASTA.split" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.fasta.splitable.SplitableFASTA.status">
+<code class="descname">status</code><a class="headerlink" href="#seqenv.fasta.splitable.SplitableFASTA.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Has the splitting been done already ?</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.fasta">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seqenv.fasta" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.fasta.FASTA">
+<em class="property">class </em><code class="descclassname">seqenv.fasta.</code><code class="descname">FASTA</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="seqenv.common.html#seqenv.common.autopaths.FilePath" title="seqenv.common.autopaths.FilePath"><code class="xref py py-class docutils literal"><span class="pre">seqenv.common.autopaths.FilePath</span></code></a></p>
+<p>A single FASTA file somewhere in the filesystem. You can read from it in
+several convenient ways. You can write to it in a automatically buffered way.
+There are several other things you can do with a FASTA file. Look at the class.</p>
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.add_seq">
+<code class="descname">add_seq</code><span class="sig-paren">(</span><em>seq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.add_seq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.add_seq" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.add_str">
+<code class="descname">add_str</code><span class="sig-paren">(</span><em>seq</em>, <em>name=None</em>, <em>description=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.add_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.add_str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.fasta.FASTA.buffer_size">
+<code class="descname">buffer_size</code><em class="property"> = 1000</em><a class="headerlink" href="#seqenv.fasta.FASTA.buffer_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.fasta.FASTA.count">
+<code class="descname">count</code><a class="headerlink" href="#seqenv.fasta.FASTA.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.create">
+<code class="descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.fasta.FASTA.extension">
+<code class="descname">extension</code><em class="property"> = 'fasta'</em><a class="headerlink" href="#seqenv.fasta.FASTA.extension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.extract_sequences">
+<code class="descname">extract_sequences</code><span class="sig-paren">(</span><em>new_fasta</em>, <em>ids</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.extract_sequences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.extract_sequences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Will take all the sequences from the current file who&#8217;s id appears in
+the ids given and place them in the new file path given.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.flush">
+<code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.flush"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.flush" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.fasta.FASTA.format">
+<code class="descname">format</code><em class="property"> = 'fasta'</em><a class="headerlink" href="#seqenv.fasta.FASTA.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.fasta.FASTA.gzipped">
+<code class="descname">gzipped</code><a class="headerlink" href="#seqenv.fasta.FASTA.gzipped" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.fasta.FASTA.ids">
+<code class="descname">ids</code><a class="headerlink" href="#seqenv.fasta.FASTA.ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the sequences ids in a set</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>mode='r'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.parse">
+<code class="descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.parse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.rename_sequences">
+<code class="descname">rename_sequences</code><span class="sig-paren">(</span><em>new_fasta</em>, <em>mapping</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.rename_sequences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.rename_sequences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a new file path, will rename all sequences in the
+current fasta file using the mapping dictionary also provided.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.fasta.FASTA.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>reads</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/fasta.html#FASTA.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.fasta.FASTA.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">seqenv.fasta package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-seqenv.fasta.splitable">seqenv.fasta.splitable module</a></li>
+<li><a class="reference internal" href="#module-seqenv.fasta">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="seqenv.html">seqenv package</a><ul>
+      <li>Previous: <a href="seqenv.common.html" title="previous chapter">seqenv.common package</a></li>
+      <li>Next: <a href="seqenv.seqsearch.html" title="next chapter">seqenv.seqsearch package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/seqenv.fasta.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/seqenv.fasta.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

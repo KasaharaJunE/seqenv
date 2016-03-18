@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.seqsearch.parallel &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="../../../index.html" />
+    <link rel="up" title="seqenv.seqsearch" href="../seqsearch.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seqenv.seqsearch.parallel</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Built-in modules #</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+
+<span class="c1"># Internal modules #</span>
+<span class="kn">from</span> <span class="nn">seqenv.seqsearch</span> <span class="kn">import</span> <span class="n">SeqSearch</span>
+<span class="kn">from</span> <span class="nn">seqenv.seqsearch.blast</span> <span class="kn">import</span> <span class="n">BLASTquery</span>
+<span class="kn">from</span> <span class="nn">seqenv.seqsearch.vsearch</span> <span class="kn">import</span> <span class="n">VSEARCHquery</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.cache</span> <span class="kn">import</span> <span class="n">property_cached</span>
+<span class="kn">from</span> <span class="nn">seqenv.fasta.splitable</span> <span class="kn">import</span> <span class="n">SplitableFASTA</span>
+
+<span class="c1"># Third party modules #</span>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="ParallelSeqSearch"><a class="viewcode-back" href="../../../seqenv.seqsearch.html#seqenv.seqsearch.parallel.ParallelSeqSearch">[docs]</a><span class="k">class</span> <span class="nc">ParallelSeqSearch</span><span class="p">(</span><span class="n">SeqSearch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The same thing as a SeqSearch but operates by chopping the input up into</span>
+<span class="sd">    smaller pieces and running the algorithm on each piece separately, finally</span>
+<span class="sd">    joining the outputs.</span>
+<span class="sd">    In addition, the pieces can be run separately on the local machine, or distributed to different</span>
+<span class="sd">    compute nodes using the SLURM system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">splitable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input fasta file, but with the ability to split it.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SplitableFASTA</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_fasta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">queries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A list of all the queries to run.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;blast&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">blast_queries</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;usearch&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vsearch_queries</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">)</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">blast_queries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make all BLAST search objects.&quot;&quot;&quot;</span>
+        <span class="c1"># Only use one CPU per query #</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blast_params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;-num_threads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># Sequence type #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_type</span> <span class="o">==</span> <span class="s1">&#39;nucl&#39;</span><span class="p">:</span> <span class="n">blast_algo</span> <span class="o">=</span> <span class="s1">&#39;blastn&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_type</span> <span class="o">==</span> <span class="s1">&#39;prot&#39;</span><span class="p">:</span> <span class="n">blast_algo</span> <span class="o">=</span> <span class="s1">&#39;blastp&#39;</span>
+        <span class="c1"># Make many queries #</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">BLASTquery</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">blast_algo</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;plus&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitable</span><span class="o">.</span><span class="n">parts</span><span class="p">]</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">vsearch_queries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make all VSEARCH search objects.&quot;&quot;&quot;</span>
+        <span class="c1"># The params should depend on the filtering options #</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Make many queries #</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">VSEARCHquery</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitable</span><span class="o">.</span><span class="n">parts</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ParallelSeqSearch.run"><a class="viewcode-back" href="../../../seqenv.seqsearch.html#seqenv.seqsearch.parallel.ParallelSeqSearch.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the search&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">splitable</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queries</span><span class="p">:</span> <span class="n">query</span><span class="o">.</span><span class="n">non_block_run</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queries</span><span class="p">:</span> <span class="n">query</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">join_outputs</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ParallelSeqSearch.join_outputs"><a class="viewcode-back" href="../../../seqenv.seqsearch.html#seqenv.seqsearch.parallel.ParallelSeqSearch.join_outputs">[docs]</a>    <span class="k">def</span> <span class="nf">join_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Join the outputs&quot;&quot;&quot;</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;cat </span><span class="si">%s</span><span class="s2"> &gt; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">out_path</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queries</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../seqsearch.html">seqenv.seqsearch</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

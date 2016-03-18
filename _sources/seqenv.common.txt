@@ -1,0 +1,70 @@
+seqenv.common package
+=====================
+
+Submodules
+----------
+
+seqenv.common.autopaths module
+------------------------------
+
+.. automodule:: seqenv.common.autopaths
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.common.cache module
+--------------------------
+
+.. automodule:: seqenv.common.cache
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.common.color module
+--------------------------
+
+.. automodule:: seqenv.common.color
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.common.database module
+-----------------------------
+
+.. automodule:: seqenv.common.database
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.common.git module
+------------------------
+
+.. automodule:: seqenv.common.git
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.common.timer module
+--------------------------
+
+.. automodule:: seqenv.common.timer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.common.tmpstuff module
+-----------------------------
+
+.. automodule:: seqenv.common.tmpstuff
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: seqenv.common
+    :members:
+    :undoc-members:
+    :show-inheritance:

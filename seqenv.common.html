@@ -1,0 +1,1084 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.common package &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="index.html" />
+    <link rel="up" title="seqenv package" href="seqenv.html" />
+    <link rel="next" title="seqenv.fasta package" href="seqenv.fasta.html" />
+    <link rel="prev" title="seqenv package" href="seqenv.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="seqenv-common-package">
+<h1>seqenv.common package<a class="headerlink" href="#seqenv-common-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-seqenv.common.autopaths">
+<span id="seqenv-common-autopaths-module"></span><h2>seqenv.common.autopaths module<a class="headerlink" href="#module-seqenv.common.autopaths" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.common.autopaths.DirectoryPath">
+<em class="property">class </em><code class="descclassname">seqenv.common.autopaths.</code><code class="descname">DirectoryPath</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#DirectoryPath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">str</span></code></p>
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.DirectoryPath.absolute_path">
+<code class="descname">absolute_path</code><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.absolute_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>The absolute path starting with a <cite>/</cite></p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="seqenv.common.autopaths.DirectoryPath.clean_path">
+<em class="property">classmethod </em><code class="descname">clean_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#DirectoryPath.clean_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.clean_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a path, return a cleaned up version for initialization.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.DirectoryPath.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>safe=False</em>, <em>inherit=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#DirectoryPath.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.DirectoryPath.directory">
+<code class="descname">directory</code><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The full path of directory containing this one</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.DirectoryPath.exists">
+<code class="descname">exists</code><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does it exist in the file system?</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.DirectoryPath.is_symlink">
+<code class="descname">is_symlink</code><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.is_symlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is this directory a symbolic link to an other directory?</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.DirectoryPath.name">
+<code class="descname">name</code><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just the directory name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.DirectoryPath.permissions">
+<code class="descname">permissions</code><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.permissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience object for dealing with permissions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.DirectoryPath.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#DirectoryPath.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.remove" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.DirectoryPath.remove_when_symlink">
+<code class="descname">remove_when_symlink</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#DirectoryPath.remove_when_symlink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.remove_when_symlink" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seqenv.common.autopaths.FilePath">
+<em class="property">class </em><code class="descclassname">seqenv.common.autopaths.</code><code class="descname">FilePath</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">str</span></code></p>
+<p>I can never remember all those darn <cite>os.path</cite> commands, so I made a class
+that wraps them with an easier and more pythonic syntax.</p>
+<blockquote>
+<div>path = FilePath(&#8216;/home/root/text.txt&#8217;)
+print path.extension
+print path.directory
+print path.filename</div></blockquote>
+<p>You can find lots of the common things you would need to do with file paths.
+Such as: path.make_executable() etc etc.</p>
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.absolute_path">
+<code class="descname">absolute_path</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.absolute_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>The absolute path starting with a <cite>/</cite></p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="seqenv.common.autopaths.FilePath.clean_path">
+<em class="property">classmethod </em><code class="descname">clean_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath.clean_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath.clean_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a path, return a cleaned up version for initialization</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.count_bytes">
+<code class="descname">count_bytes</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.count_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of bytes</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.count_lines">
+<code class="descname">count_lines</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.count_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.directory">
+<code class="descname">directory</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The directory containing this file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.exists">
+<code class="descname">exists</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does it exist in the file system. Returns True or False.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.extension">
+<code class="descname">extension</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>The extension with the leading period</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.filename">
+<code class="descname">filename</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just the filename with the extension</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePath.link_from">
+<code class="descname">link_from</code><span class="sig-paren">(</span><em>path</em>, <em>safe=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath.link_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath.link_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a link here pointing to another file somewhere else.
+The destination is hence self.path and the source is <em>path</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePath.link_to">
+<code class="descname">link_to</code><span class="sig-paren">(</span><em>path</em>, <em>safe=False</em>, <em>absolute=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath.link_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath.link_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a link somewhere else pointing to this file.
+The destination is hence <em>path</em> and the source is self.path.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePath.must_exist">
+<code class="descname">must_exist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath.must_exist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath.must_exist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise an exception if the path doesn&#8217;t exist.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.prefix">
+<code class="descname">prefix</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just the filename without the (last) extension and trailing period</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.prefix_path">
+<code class="descname">prefix_path</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.prefix_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>The full path without the (last) extension and trailing period</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePath.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath.remove" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePath.size">
+<code class="descname">size</code><a class="headerlink" href="#seqenv.common.autopaths.FilePath.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Human readable file size</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePath.unzip_to">
+<code class="descname">unzip_to</code><span class="sig-paren">(</span><em>destination=None</em>, <em>inplace=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath.unzip_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath.unzip_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make an unzipped version of the file at a given path</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePath.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>contents</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePath.writelines">
+<code class="descname">writelines</code><span class="sig-paren">(</span><em>contents</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePath.writelines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePath.writelines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seqenv.common.autopaths.FilePermissions">
+<em class="property">class </em><code class="descclassname">seqenv.common.autopaths.</code><code class="descname">FilePermissions</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePermissions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePermissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Container for reading and setting a files permissions</p>
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePermissions.make_executable">
+<code class="descname">make_executable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePermissions.make_executable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePermissions.make_executable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.FilePermissions.number">
+<code class="descname">number</code><a class="headerlink" href="#seqenv.common.autopaths.FilePermissions.number" title="Permalink to this definition">¶</a></dt>
+<dd><p>The permission bits as an octal integer</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.FilePermissions.only_readable">
+<code class="descname">only_readable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#FilePermissions.only_readable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.FilePermissions.only_readable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all writing privileges</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seqenv.common.autopaths.Filesize">
+<em class="property">class </em><code class="descclassname">seqenv.common.autopaths.</code><code class="descname">Filesize</code><span class="sig-paren">(</span><em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#Filesize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.Filesize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Container for a size in bytes with a human readable representation
+Use it like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">size</span> <span class="o">=</span> <span class="n">Filesize</span><span class="p">(</span><span class="mi">123123123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">size</span>
+<span class="go">&#39;117.4 MiB&#39;</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.Filesize.chunk">
+<code class="descname">chunk</code><em class="property"> = 1000</em><a class="headerlink" href="#seqenv.common.autopaths.Filesize.chunk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.autopaths.Filesize.format">
+<code class="descname">format</code><span class="sig-paren">(</span><em>unit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#Filesize.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.Filesize.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.Filesize.precisions">
+<code class="descname">precisions</code><em class="property"> = [0, 0, 1, 2, 2, 2]</em><a class="headerlink" href="#seqenv.common.autopaths.Filesize.precisions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.autopaths.Filesize.units">
+<code class="descname">units</code><em class="property"> = ['bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']</em><a class="headerlink" href="#seqenv.common.autopaths.Filesize.units" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.common.cache">
+<span id="seqenv-common-cache-module"></span><h2>seqenv.common.cache module<a class="headerlink" href="#module-seqenv.common.cache" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="seqenv.common.cache.property_cached">
+<code class="descclassname">seqenv.common.cache.</code><code class="descname">property_cached</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/cache.html#property_cached"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.cache.property_cached" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for properties evaluated only once.
+It can be used to created a cached property like this:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>class Employee(object):</dt>
+<dd><p class="first">&#64;property_cached
+def salary(self):</p>
+<blockquote class="last">
+<div>print &#8220;Evaluating...&#8221;
+return time.time()</div></blockquote>
+</dd>
+</dl>
+<p>bob = Employee()
+print bob.salary
+bob.salary = &#8220;10000$&#8221;
+print bob.salary</p>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.common.color">
+<span id="seqenv-common-color-module"></span><h2>seqenv.common.color module<a class="headerlink" href="#module-seqenv.common.color" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.common.color.Color">
+<em class="property">class </em><code class="descclassname">seqenv.common.color.</code><code class="descname">Color</code><a class="reference internal" href="_modules/seqenv/common/color.html#Color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.color.Color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcuts for the ANSI escape sequences to control
+formatting, color, etc. on text terminals. Use it like this:</p>
+<blockquote>
+<div>print Color.red + &#8220;Hello world&#8221; + Color.end</div></blockquote>
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.b_blk">
+<code class="descname">b_blk</code><em class="property"> = '\x1b[1;30m'</em><a class="headerlink" href="#seqenv.common.color.Color.b_blk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.b_blu">
+<code class="descname">b_blu</code><em class="property"> = '\x1b[1;34m'</em><a class="headerlink" href="#seqenv.common.color.Color.b_blu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.b_cyn">
+<code class="descname">b_cyn</code><em class="property"> = '\x1b[1;36m'</em><a class="headerlink" href="#seqenv.common.color.Color.b_cyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.b_grn">
+<code class="descname">b_grn</code><em class="property"> = '\x1b[1;32m'</em><a class="headerlink" href="#seqenv.common.color.Color.b_grn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.b_pur">
+<code class="descname">b_pur</code><em class="property"> = '\x1b[1;35m'</em><a class="headerlink" href="#seqenv.common.color.Color.b_pur" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.b_red">
+<code class="descname">b_red</code><em class="property"> = '\x1b[1;31m'</em><a class="headerlink" href="#seqenv.common.color.Color.b_red" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.b_wht">
+<code class="descname">b_wht</code><em class="property"> = '\x1b[1;37m'</em><a class="headerlink" href="#seqenv.common.color.Color.b_wht" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.b_ylw">
+<code class="descname">b_ylw</code><em class="property"> = '\x1b[1;33m'</em><a class="headerlink" href="#seqenv.common.color.Color.b_ylw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.blk">
+<code class="descname">blk</code><em class="property"> = '\x1b[0;30m'</em><a class="headerlink" href="#seqenv.common.color.Color.blk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.blu">
+<code class="descname">blu</code><em class="property"> = '\x1b[0;34m'</em><a class="headerlink" href="#seqenv.common.color.Color.blu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.bold">
+<code class="descname">bold</code><em class="property"> = '\x1b[1m'</em><a class="headerlink" href="#seqenv.common.color.Color.bold" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.cyn">
+<code class="descname">cyn</code><em class="property"> = '\x1b[0;36m'</em><a class="headerlink" href="#seqenv.common.color.Color.cyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.end">
+<code class="descname">end</code><em class="property"> = '\x1b[0m'</em><a class="headerlink" href="#seqenv.common.color.Color.end" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.f_blk">
+<code class="descname">f_blk</code><em class="property"> = '\x1b[40m'</em><a class="headerlink" href="#seqenv.common.color.Color.f_blk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.f_blu">
+<code class="descname">f_blu</code><em class="property"> = '\x1b[44m'</em><a class="headerlink" href="#seqenv.common.color.Color.f_blu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.f_cyn">
+<code class="descname">f_cyn</code><em class="property"> = '\x1b[46m'</em><a class="headerlink" href="#seqenv.common.color.Color.f_cyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.f_grn">
+<code class="descname">f_grn</code><em class="property"> = '\x1b[42m'</em><a class="headerlink" href="#seqenv.common.color.Color.f_grn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.f_pur">
+<code class="descname">f_pur</code><em class="property"> = '\x1b[45m'</em><a class="headerlink" href="#seqenv.common.color.Color.f_pur" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.f_red">
+<code class="descname">f_red</code><em class="property"> = '\x1b[41m'</em><a class="headerlink" href="#seqenv.common.color.Color.f_red" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.f_wht">
+<code class="descname">f_wht</code><em class="property"> = '\x1b[47m'</em><a class="headerlink" href="#seqenv.common.color.Color.f_wht" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.f_ylw">
+<code class="descname">f_ylw</code><em class="property"> = '\x1b[43m'</em><a class="headerlink" href="#seqenv.common.color.Color.f_ylw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.flash">
+<code class="descname">flash</code><em class="property"> = '\x1b[5m'</em><a class="headerlink" href="#seqenv.common.color.Color.flash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.g_blk">
+<code class="descname">g_blk</code><em class="property"> = '\x1b[5;30m'</em><a class="headerlink" href="#seqenv.common.color.Color.g_blk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.g_blu">
+<code class="descname">g_blu</code><em class="property"> = '\x1b[5;34m'</em><a class="headerlink" href="#seqenv.common.color.Color.g_blu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.g_cyn">
+<code class="descname">g_cyn</code><em class="property"> = '\x1b[5;36m'</em><a class="headerlink" href="#seqenv.common.color.Color.g_cyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.g_grn">
+<code class="descname">g_grn</code><em class="property"> = '\x1b[5;32m'</em><a class="headerlink" href="#seqenv.common.color.Color.g_grn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.g_pur">
+<code class="descname">g_pur</code><em class="property"> = '\x1b[5;35m'</em><a class="headerlink" href="#seqenv.common.color.Color.g_pur" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.g_red">
+<code class="descname">g_red</code><em class="property"> = '\x1b[5;31m'</em><a class="headerlink" href="#seqenv.common.color.Color.g_red" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.g_wht">
+<code class="descname">g_wht</code><em class="property"> = '\x1b[5;37m'</em><a class="headerlink" href="#seqenv.common.color.Color.g_wht" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.g_ylw">
+<code class="descname">g_ylw</code><em class="property"> = '\x1b[5;33m'</em><a class="headerlink" href="#seqenv.common.color.Color.g_ylw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.grn">
+<code class="descname">grn</code><em class="property"> = '\x1b[0;32m'</em><a class="headerlink" href="#seqenv.common.color.Color.grn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.i_blk">
+<code class="descname">i_blk</code><em class="property"> = '\x1b[3;30m'</em><a class="headerlink" href="#seqenv.common.color.Color.i_blk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.i_blu">
+<code class="descname">i_blu</code><em class="property"> = '\x1b[3;34m'</em><a class="headerlink" href="#seqenv.common.color.Color.i_blu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.i_cyn">
+<code class="descname">i_cyn</code><em class="property"> = '\x1b[3;36m'</em><a class="headerlink" href="#seqenv.common.color.Color.i_cyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.i_grn">
+<code class="descname">i_grn</code><em class="property"> = '\x1b[3;32m'</em><a class="headerlink" href="#seqenv.common.color.Color.i_grn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.i_pur">
+<code class="descname">i_pur</code><em class="property"> = '\x1b[3;35m'</em><a class="headerlink" href="#seqenv.common.color.Color.i_pur" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.i_red">
+<code class="descname">i_red</code><em class="property"> = '\x1b[3;31m'</em><a class="headerlink" href="#seqenv.common.color.Color.i_red" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.i_wht">
+<code class="descname">i_wht</code><em class="property"> = '\x1b[3;37m'</em><a class="headerlink" href="#seqenv.common.color.Color.i_wht" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.i_ylw">
+<code class="descname">i_ylw</code><em class="property"> = '\x1b[3;33m'</em><a class="headerlink" href="#seqenv.common.color.Color.i_ylw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.italic">
+<code class="descname">italic</code><em class="property"> = '\x1b[1m'</em><a class="headerlink" href="#seqenv.common.color.Color.italic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.l_blk">
+<code class="descname">l_blk</code><em class="property"> = '\x1b[2;30m'</em><a class="headerlink" href="#seqenv.common.color.Color.l_blk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.l_blu">
+<code class="descname">l_blu</code><em class="property"> = '\x1b[2;34m'</em><a class="headerlink" href="#seqenv.common.color.Color.l_blu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.l_cyn">
+<code class="descname">l_cyn</code><em class="property"> = '\x1b[2;36m'</em><a class="headerlink" href="#seqenv.common.color.Color.l_cyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.l_grn">
+<code class="descname">l_grn</code><em class="property"> = '\x1b[2;32m'</em><a class="headerlink" href="#seqenv.common.color.Color.l_grn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.l_pur">
+<code class="descname">l_pur</code><em class="property"> = '\x1b[2;35m'</em><a class="headerlink" href="#seqenv.common.color.Color.l_pur" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.l_red">
+<code class="descname">l_red</code><em class="property"> = '\x1b[2;31m'</em><a class="headerlink" href="#seqenv.common.color.Color.l_red" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.l_wht">
+<code class="descname">l_wht</code><em class="property"> = '\x1b[2;37m'</em><a class="headerlink" href="#seqenv.common.color.Color.l_wht" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.l_ylw">
+<code class="descname">l_ylw</code><em class="property"> = '\x1b[2;33m'</em><a class="headerlink" href="#seqenv.common.color.Color.l_ylw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.light">
+<code class="descname">light</code><em class="property"> = '\x1b[2m'</em><a class="headerlink" href="#seqenv.common.color.Color.light" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.pur">
+<code class="descname">pur</code><em class="property"> = '\x1b[0;35m'</em><a class="headerlink" href="#seqenv.common.color.Color.pur" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.red">
+<code class="descname">red</code><em class="property"> = '\x1b[0;31m'</em><a class="headerlink" href="#seqenv.common.color.Color.red" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.u_blk">
+<code class="descname">u_blk</code><em class="property"> = '\x1b[4;30m'</em><a class="headerlink" href="#seqenv.common.color.Color.u_blk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.u_blu">
+<code class="descname">u_blu</code><em class="property"> = '\x1b[4;34m'</em><a class="headerlink" href="#seqenv.common.color.Color.u_blu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.u_cyn">
+<code class="descname">u_cyn</code><em class="property"> = '\x1b[4;36m'</em><a class="headerlink" href="#seqenv.common.color.Color.u_cyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.u_grn">
+<code class="descname">u_grn</code><em class="property"> = '\x1b[4;32m'</em><a class="headerlink" href="#seqenv.common.color.Color.u_grn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.u_pur">
+<code class="descname">u_pur</code><em class="property"> = '\x1b[4;35m'</em><a class="headerlink" href="#seqenv.common.color.Color.u_pur" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.u_red">
+<code class="descname">u_red</code><em class="property"> = '\x1b[4;31m'</em><a class="headerlink" href="#seqenv.common.color.Color.u_red" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.u_wht">
+<code class="descname">u_wht</code><em class="property"> = '\x1b[4;37m'</em><a class="headerlink" href="#seqenv.common.color.Color.u_wht" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.u_ylw">
+<code class="descname">u_ylw</code><em class="property"> = '\x1b[4;33m'</em><a class="headerlink" href="#seqenv.common.color.Color.u_ylw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.underline">
+<code class="descname">underline</code><em class="property"> = '\x1b[4m'</em><a class="headerlink" href="#seqenv.common.color.Color.underline" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.wht">
+<code class="descname">wht</code><em class="property"> = '\x1b[0;37m'</em><a class="headerlink" href="#seqenv.common.color.Color.wht" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.color.Color.ylw">
+<code class="descname">ylw</code><em class="property"> = '\x1b[0;33m'</em><a class="headerlink" href="#seqenv.common.color.Color.ylw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.common.database">
+<span id="seqenv-common-database-module"></span><h2>seqenv.common.database module<a class="headerlink" href="#module-seqenv.common.database" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.common.database.Database">
+<em class="property">class </em><code class="descclassname">seqenv.common.database.</code><code class="descname">Database</code><span class="sig-paren">(</span><em>path</em>, <em>factory=None</em>, <em>text_fact=None</em>, <em>isolation=None</em>, <em>retrieve=None</em>, <em>md5=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seqenv.common.autopaths.FilePath" title="seqenv.common.autopaths.FilePath"><code class="xref py py-class docutils literal"><span class="pre">seqenv.common.autopaths.FilePath</span></code></a></p>
+<dl class="method">
+<dt id="seqenv.common.database.Database.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>entries</em>, <em>table=None</em>, <em>columns=None</em>, <em>ignore=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add entries to a table.
+The <em>entries</em> variable should be an iterable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.add_by_steps">
+<code class="descname">add_by_steps</code><span class="sig-paren">(</span><em>entries_by_step</em>, <em>table=None</em>, <em>columns=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.add_by_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.add_by_steps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add entries to the main table.
+The <em>entries</em> variable should be an iterable yielding iterables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.add_column">
+<code class="descname">add_column</code><span class="sig-paren">(</span><em>name</em>, <em>kind=None</em>, <em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.add_column"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.add_column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add add a new column to a table.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.add_table">
+<code class="descname">add_table</code><span class="sig-paren">(</span><em>name</em>, <em>columns</em>, <em>type_map=None</em>, <em>if_not_exists=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.add_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.add_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add add a new table to the database.  For instance you could do this:
+self.add_table(&#8216;data&#8217;, {&#8216;id&#8217;:&#8217;integer&#8217;, &#8216;source&#8217;:&#8217;text&#8217;, &#8216;pubmed&#8217;:&#8217;integer&#8217;})</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.check_format">
+<code class="descname">check_format</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.check_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.check_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.columns">
+<code class="descname">columns</code><a class="headerlink" href="#seqenv.common.database.Database.columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of columns available in every entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.connection">
+<code class="descname">connection</code><a class="headerlink" href="#seqenv.common.database.Database.connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be used externally by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.count_entries">
+<code class="descname">count_entries</code><span class="sig-paren">(</span><em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.count_entries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.count_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>How many rows in a table.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>columns</em>, <em>type_map=None</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new database with a certain schema.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.cursor">
+<code class="descname">cursor</code><a class="headerlink" href="#seqenv.common.database.Database.cursor" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be used externally by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.detailed_error">
+<code class="descname">detailed_error</code><span class="sig-paren">(</span><em>sql_command</em>, <em>columns</em>, <em>entries</em>, <em>err</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.detailed_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.detailed_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience shortcut.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.first">
+<code class="descname">first</code><a class="headerlink" href="#seqenv.common.database.Database.first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just the first entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.frame">
+<code class="descname">frame</code><a class="headerlink" href="#seqenv.common.database.Database.frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main table as a blaze data structure. Not ready yet.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>table</em>, <em>column</em>, <em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.get_and_order">
+<code class="descname">get_and_order</code><span class="sig-paren">(</span><em>ids</em>, <em>column=None</em>, <em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.get_and_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.get_and_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get specific entries and order them in the same way.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.get_columns_of_table">
+<code class="descname">get_columns_of_table</code><span class="sig-paren">(</span><em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.get_columns_of_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.get_columns_of_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of columns for a particular table
+by querying the SQL for the complete list of column names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.get_entry">
+<code class="descname">get_entry</code><span class="sig-paren">(</span><em>key</em>, <em>column=None</em>, <em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.get_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.get_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a specific entry.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.get_first">
+<code class="descname">get_first</code><span class="sig-paren">(</span><em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.get_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.get_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just the first entry.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.get_last">
+<code class="descname">get_last</code><span class="sig-paren">(</span><em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.get_last"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.get_last" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just the last entry.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.get_number">
+<code class="descname">get_number</code><span class="sig-paren">(</span><em>num</em>, <em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.get_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.get_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a specific entry by it&#8217;s number.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.index">
+<code class="descname">index</code><span class="sig-paren">(</span><em>column='id'</em>, <em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.last">
+<code class="descname">last</code><a class="headerlink" href="#seqenv.common.database.Database.last" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just the last entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.main_table">
+<code class="descname">main_table</code><a class="headerlink" href="#seqenv.common.database.Database.main_table" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.new_connection">
+<code class="descname">new_connection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.new_connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.new_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a new connection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.open">
+<code class="descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reopen a database that was closed, useful for debugging.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.own_connection">
+<code class="descname">own_connection</code><a class="headerlink" href="#seqenv.common.database.Database.own_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be used internally in this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.own_cursor">
+<code class="descname">own_cursor</code><a class="headerlink" href="#seqenv.common.database.Database.own_cursor" title="Permalink to this definition">¶</a></dt>
+<dd><p>To be used internally in this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the file exists, optionally downloads it.
+Checks that the file is indeed an SQLite3 database.
+Optionally check the MD5.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.database.Database.tables">
+<code class="descname">tables</code><a class="headerlink" href="#seqenv.common.database.Database.tables" title="Permalink to this definition">¶</a></dt>
+<dd><p>The complete list of SQL tables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.uniquify">
+<code class="descname">uniquify</code><span class="sig-paren">(</span><em>name</em>, <em>kind=None</em>, <em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.uniquify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.uniquify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove entries that have duplicate values on a specific column.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.database.Database.vacuum">
+<code class="descname">vacuum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/database.html#Database.vacuum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.database.Database.vacuum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compact the database, remove old transactions.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.common.git">
+<span id="seqenv-common-git-module"></span><h2>seqenv.common.git module<a class="headerlink" href="#module-seqenv.common.git" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.common.git.GitRepo">
+<em class="property">class </em><code class="descclassname">seqenv.common.git.</code><code class="descname">GitRepo</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/git.html#GitRepo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.git.GitRepo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A git repository with some convenience methods.</p>
+<dl class="attribute">
+<dt id="seqenv.common.git.GitRepo.branch">
+<code class="descname">branch</code><a class="headerlink" href="#seqenv.common.git.GitRepo.branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>For instance: u&#8217;master&#8217;</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.git.GitRepo.hash">
+<code class="descname">hash</code><a class="headerlink" href="#seqenv.common.git.GitRepo.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>For instance: u&#8217;f0c796dae64a5a118d88e60523c011d535e8c476&#8217;</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.git.GitRepo.remote_branch">
+<code class="descname">remote_branch</code><a class="headerlink" href="#seqenv.common.git.GitRepo.remote_branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>For instance: u&#8217;origin/master&#8217;</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.git.GitRepo.short_hash">
+<code class="descname">short_hash</code><a class="headerlink" href="#seqenv.common.git.GitRepo.short_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>For instance: u&#8217;f0c796dae64a5a118d88e60523c011d535e8c476&#8217;</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.git.GitRepo.tag">
+<code class="descname">tag</code><a class="headerlink" href="#seqenv.common.git.GitRepo.tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>For instance: u&#8216;1.0.3-69-gf0c796d-dirty&#8217;</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.common.timer">
+<span id="seqenv-common-timer-module"></span><h2>seqenv.common.timer module<a class="headerlink" href="#module-seqenv.common.timer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.common.timer.Timer">
+<em class="property">class </em><code class="descclassname">seqenv.common.timer.</code><code class="descname">Timer</code><a class="reference internal" href="_modules/seqenv/common/timer.html#Timer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.timer.Timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Useful for timing the different steps in a pipeline</p>
+<dl class="attribute">
+<dt id="seqenv.common.timer.Timer.color">
+<code class="descname">color</code><a class="headerlink" href="#seqenv.common.timer.Timer.color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should we use color or not ? If we are not in a shell like ipython then not</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.timer.Timer.prefix">
+<code class="descname">prefix</code><a class="headerlink" href="#seqenv.common.timer.Timer.prefix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.timer.Timer.print_elapsed">
+<code class="descname">print_elapsed</code><span class="sig-paren">(</span><em>reset=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/timer.html#Timer.print_elapsed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.timer.Timer.print_elapsed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.timer.Timer.print_end">
+<code class="descname">print_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/timer.html#Timer.print_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.timer.Timer.print_end" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.timer.Timer.print_start">
+<code class="descname">print_start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/timer.html#Timer.print_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.timer.Timer.print_start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.common.timer.Timer.print_total_elapsed">
+<code class="descname">print_total_elapsed</code><span class="sig-paren">(</span><em>reset=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/timer.html#Timer.print_total_elapsed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.timer.Timer.print_total_elapsed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.common.timer.Timer.suffix">
+<code class="descname">suffix</code><a class="headerlink" href="#seqenv.common.timer.Timer.suffix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.common.tmpstuff">
+<span id="seqenv-common-tmpstuff-module"></span><h2>seqenv.common.tmpstuff module<a class="headerlink" href="#module-seqenv.common.tmpstuff" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.common.tmpstuff.TmpFile">
+<em class="property">class </em><code class="descclassname">seqenv.common.tmpstuff.</code><code class="descname">TmpFile</code><span class="sig-paren">(</span><em>path=None</em>, <em>content=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/tmpstuff.html#TmpFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.tmpstuff.TmpFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seqenv.common.autopaths.FilePath" title="seqenv.common.autopaths.FilePath"><code class="xref py py-class docutils literal"><span class="pre">seqenv.common.autopaths.FilePath</span></code></a></p>
+<dl class="classmethod">
+<dt id="seqenv.common.tmpstuff.TmpFile.empty">
+<em class="property">classmethod </em><code class="descname">empty</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/tmpstuff.html#TmpFile.empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.tmpstuff.TmpFile.empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="seqenv.common.tmpstuff.TmpFile.from_string">
+<em class="property">classmethod </em><code class="descname">from_string</code><span class="sig-paren">(</span><em>string</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/tmpstuff.html#TmpFile.from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.tmpstuff.TmpFile.from_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="seqenv.common.tmpstuff.new_temp_file">
+<code class="descclassname">seqenv.common.tmpstuff.</code><code class="descname">new_temp_file</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/tmpstuff.html#new_temp_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.tmpstuff.new_temp_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>A new temporary file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seqenv.common.tmpstuff.new_temp_path">
+<code class="descclassname">seqenv.common.tmpstuff.</code><code class="descname">new_temp_path</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/tmpstuff.html#new_temp_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.tmpstuff.new_temp_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>A new temporary path</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.common">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seqenv.common" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.common.GenWithLength">
+<em class="property">class </em><code class="descclassname">seqenv.common.</code><code class="descname">GenWithLength</code><span class="sig-paren">(</span><em>gen</em>, <em>length</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common.html#GenWithLength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.GenWithLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A generator with a length attribute</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seqenv.common.download_from_url">
+<code class="descclassname">seqenv.common.</code><code class="descname">download_from_url</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em>, <em>progress=False</em>, <em>uncompress=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common.html#download_from_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.download_from_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download a file from an URL and place it somewhere. Like wget.
+Uses requests and tqdm to display progress if you want.
+By default it will uncompress files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seqenv.common.flatter">
+<code class="descclassname">seqenv.common.</code><code class="descname">flatter</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#seqenv.common.flatter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="seqenv.common.md5sum">
+<code class="descclassname">seqenv.common.</code><code class="descname">md5sum</code><span class="sig-paren">(</span><em>file_path</em>, <em>blocksize=65536</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common.html#md5sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.md5sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the md5 of a file. Pretty fast.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seqenv.common.new_temp_path">
+<code class="descclassname">seqenv.common.</code><code class="descname">new_temp_path</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common.html#new_temp_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.new_temp_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>A new temporary path</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seqenv.common.pretty_now">
+<code class="descclassname">seqenv.common.</code><code class="descname">pretty_now</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common.html#pretty_now"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.pretty_now" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns some thing like &#8216;2014-07-24 11:12:45 CEST+0200&#8217;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seqenv.common.unzip">
+<code class="descclassname">seqenv.common.</code><code class="descname">unzip</code><span class="sig-paren">(</span><em>source</em>, <em>destination=None</em>, <em>inplace=False</em>, <em>single=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common.html#unzip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.unzip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unzip a standard zip file. Can specify the destination of the
+uncompressed file, or just set inplace=True to delete the original.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">seqenv.common package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-seqenv.common.autopaths">seqenv.common.autopaths module</a></li>
+<li><a class="reference internal" href="#module-seqenv.common.cache">seqenv.common.cache module</a></li>
+<li><a class="reference internal" href="#module-seqenv.common.color">seqenv.common.color module</a></li>
+<li><a class="reference internal" href="#module-seqenv.common.database">seqenv.common.database module</a></li>
+<li><a class="reference internal" href="#module-seqenv.common.git">seqenv.common.git module</a></li>
+<li><a class="reference internal" href="#module-seqenv.common.timer">seqenv.common.timer module</a></li>
+<li><a class="reference internal" href="#module-seqenv.common.tmpstuff">seqenv.common.tmpstuff module</a></li>
+<li><a class="reference internal" href="#module-seqenv.common">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="seqenv.html">seqenv package</a><ul>
+      <li>Previous: <a href="seqenv.html" title="previous chapter">seqenv package</a></li>
+      <li>Next: <a href="seqenv.fasta.html" title="next chapter">seqenv.fasta package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/seqenv.common.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/seqenv.common.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

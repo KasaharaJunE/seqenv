@@ -1,0 +1,480 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv package &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="index.html" />
+    <link rel="next" title="seqenv.common package" href="seqenv.common.html" />
+    <link rel="prev" title="Welcome to seqenv’s documentation!" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="seqenv-package">
+<h1>seqenv package<a class="headerlink" href="#seqenv-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="seqenv.common.html">seqenv.common package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#module-seqenv.common.autopaths">seqenv.common.autopaths module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#module-seqenv.common.cache">seqenv.common.cache module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#module-seqenv.common.color">seqenv.common.color module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#module-seqenv.common.database">seqenv.common.database module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#module-seqenv.common.git">seqenv.common.git module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#module-seqenv.common.timer">seqenv.common.timer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#module-seqenv.common.tmpstuff">seqenv.common.tmpstuff module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.common.html#module-seqenv.common">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seqenv.fasta.html">seqenv.fasta package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.fasta.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.fasta.html#module-seqenv.fasta.splitable">seqenv.fasta.splitable module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.fasta.html#module-seqenv.fasta">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seqenv.seqsearch.html">seqenv.seqsearch package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.seqsearch.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.seqsearch.html#module-seqenv.seqsearch.blast">seqenv.seqsearch.blast module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.seqsearch.html#module-seqenv.seqsearch.parallel">seqenv.seqsearch.parallel module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.seqsearch.html#module-seqenv.seqsearch.vsearch">seqenv.seqsearch.vsearch module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seqenv.seqsearch.html#module-seqenv.seqsearch">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-seqenv.analysis">
+<span id="seqenv-analysis-module"></span><h2>seqenv.analysis module<a class="headerlink" href="#module-seqenv.analysis" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.analysis.Analysis">
+<em class="property">class </em><code class="descclassname">seqenv.analysis.</code><code class="descname">Analysis</code><span class="sig-paren">(</span><em>input_file</em>, <em>seq_type='nucl'</em>, <em>search_algo='blast'</em>, <em>search_db='nt'</em>, <em>normalization='ui'</em>, <em>proportional=True</em>, <em>backtracking=False</em>, <em>num_threads=None</em>, <em>out_dir=None</em>, <em>min_identity=0.97</em>, <em>e_value=0.0001</em>, <em>max_targets=10</em>, <em>min_coverage=0.97</em>, <em>abundances=None</em>, <em>N=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/analysis.html#Analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.analysis.Analysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>The main object. The only mandatory argument is the input fasta file path.
+The text below is somewhat redundant with what is in the README file and also
+the text in the command line script.</p>
+<ul>
+<li><p class="first">&#8216;seq_type&#8217;: Either <cite>nucl</cite> or <cite>prot</cite>. Defaults to <cite>nucl</cite>.</p>
+</li>
+<li><p class="first"><cite>search_algo</cite>: Either &#8216;blast&#8217; or &#8216;usearch&#8217;. Defaults to <cite>blast</cite>.</p>
+</li>
+<li><p class="first"><cite>search_db</cite>: The path to the database to search against. Defaults to <cite>nt</cite>.</p>
+</li>
+<li><p class="first"><cite>normalization</cite>: Can be either of <cite>flat</cite>, <cite>ui</cite> or <cite>upui</cite>.
+This option defaults to <cite>ui</cite>.</p>
+<blockquote>
+<div><ul class="simple">
+<li>If you choose <cite>flat</cite>, we will count every isolation source independently,
+even if the same text appears several times for the same input sequence.</li>
+<li>If you choose <cite>ui</cite>, standing for unique isolation, we will count every
+identical isolation source only once within the same input sequence.</li>
+<li>If you choose <cite>upui</cite>, standing for unique isolation and unique pubmed-ID,
+we will uniquify the counts based on the text entry of the isolation
+sources as well as on the pubmed identifiers from which the GI obtained.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="first docutils">
+<dt><cite>relative</cite>: Should we divide the counts of every input sequence by the</dt>
+<dd><p class="first last">number of envo terms that were associated to it.
+Defaults to <cite>True</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>proportional</cite>: Should we divide the counts of every input sequence by the</dt>
+<dd><p class="first last">number of envo terms that were associated to it.
+Defaults to <cite>True</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>backtracking</cite>: For every term identified by the tagger, we will propagate</dt>
+<dd><p class="first last">frequency counts up the acyclic directed graph described by
+the ontology. Defaults to <cite>False</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>num_threads</cite>: The number of threads. Default to the number of cores on the</dt>
+<dd><p class="first last">current machine.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>out_dir</cite>: Place all the outputs in the specified directory.</dt>
+<dd><p class="first last">Defaults to the input file&#8217;s directory.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Sequence similarity search filtering options:</dt>
+<dd><ul class="first last simple">
+<li>min_identity: Defaults to 0.97</li>
+<li>e_value: Defaults to 0.0001</li>
+<li>max_targets: Defaults to 10</li>
+<li>min_coverage: Defaults to 0.97</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>abundances</cite>: If you have sample information, then you can provide the</dt>
+<dd><p class="first last">&#8216;abundances&#8217; argument too. It should be a TSV file with OTUs
+as rows and sample names as columns.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>N</cite>: Use only the top <cite>N</cite> sequences in terms of their abundance, discard</dt>
+<dd><p class="first last">the rest. Only valid if abundances are provided.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.child_to_parents">
+<code class="descname">child_to_parents</code><a class="headerlink" href="#seqenv.analysis.Analysis.child_to_parents" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary linking every concept id to a list of parent concept ids.
+Every line in the file contains two columns: child_serial, parent_serial
+An example line: 1007000003 1007001640</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.concept_to_name">
+<code class="descname">concept_to_name</code><a class="headerlink" href="#seqenv.analysis.Analysis.concept_to_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary linking the concept id to relevant names. In this case ENVO terms.
+Hence, ENVO:00000095 would be linked to &#8216;lava field&#8217;
+An example line: ENVO:00000015  ocean</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.db">
+<code class="descname">db</code><a class="headerlink" href="#seqenv.analysis.Analysis.db" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sqlite3 database containing every GI number in all NCBI that has an
+isolation source associated to it. In addition, the pubmed-ID is listed too
+if there is one. If we don&#8217;t have it locally already, we will go download it.
+Thus, the database containing two tables:</p>
+<dl class="docutils">
+<dt>CREATE TABLE &#8220;gi&#8221;</dt>
+<dd><dl class="first docutils">
+<dt>(</dt>
+<dd>&#8220;id&#8221;      INTEGER PRIMARY KEY NOT NULL,
+&#8220;isokey&#8221;  INTEGER NOT NULL REFERENCES &#8220;isolation&#8221;(&#8220;id&#8221;),
+&#8220;pubmed&#8221;  INTEGER</dd>
+</dl>
+<p class="last">);</p>
+</dd>
+<dt>CREATE TABLE &#8220;isolation&#8221;</dt>
+<dd><dl class="first docutils">
+<dt>(</dt>
+<dd>&#8220;id&#8221;     INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+&#8220;source&#8221; TEXT NOT NULL,
+&#8220;envos&#8221;  BLOB NOT NULL &lt;- marshaled tuple of ints</dd>
+</dl>
+<p class="last">);</p>
+</dd>
+</dl>
+<p>CREATE VIEW &#8220;data&#8221; AS SELECT gi.id, (-&gt;source), gi.pubmed, (-&gt;envos) from &#8220;gi&#8221;;
+CREATE INDEX &#8220;gi_index&#8221; on &#8220;gi&#8221; (id);
+CREATE INDEX &#8220;isolation_index&#8221; on &#8220;isolation&#8221; (source);</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.df_abundances">
+<code class="descname">df_abundances</code><a class="headerlink" href="#seqenv.analysis.Analysis.df_abundances" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pandas DataFrame object containing the abundance counts
+with OTUs as rows and sample names as columns.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.filtering">
+<code class="descname">filtering</code><a class="headerlink" href="#seqenv.analysis.Analysis.filtering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary with the filtering options for the sequence similarity
+search.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.gis_with_envo">
+<code class="descname">gis_with_envo</code><a class="headerlink" href="#seqenv.analysis.Analysis.gis_with_envo" title="Permalink to this definition">¶</a></dt>
+<dd><p>A set containing every GI that was found and that had some envo numbers associated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.only_top_sequences">
+<code class="descname">only_top_sequences</code><a class="headerlink" href="#seqenv.analysis.Analysis.only_top_sequences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a new fasta file where only the top N sequences are included
+(in terms of their abundance). Skipped if no abundance info is given.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.orig_names_to_renamed">
+<code class="descname">orig_names_to_renamed</code><a class="headerlink" href="#seqenv.analysis.Analysis.orig_names_to_renamed" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary linking every sequence&#8217;s name in the input FASTA to a
+new name following the scheme &#8220;C1&#8221;, &#8220;C2&#8221;, &#8220;C3&#8221; etc.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.renamed_fasta">
+<code class="descname">renamed_fasta</code><a class="headerlink" href="#seqenv.analysis.Analysis.renamed_fasta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a new fasta file where every name in the input FASTA file is replaced
+with &#8220;C1&#8221;, &#8220;C2&#8221;, &#8220;C3&#8221; etc. Returns this new FASTA file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.renamed_to_orig">
+<code class="descname">renamed_to_orig</code><a class="headerlink" href="#seqenv.analysis.Analysis.renamed_to_orig" title="Permalink to this definition">¶</a></dt>
+<dd><p>The opposite of the above dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.analysis.Analysis.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/analysis.html#Analysis.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.analysis.Analysis.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method to run the whole pipeline. As everything is coded in a functional
+style, we just need to make a call to <cite>outputs.make_all</cite> and everything will be
+generated automatically, in a reverse fashion.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.search">
+<code class="descname">search</code><a class="headerlink" href="#seqenv.analysis.Analysis.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>The similarity search object with all the relevant parameters.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.search_results">
+<code class="descname">search_results</code><a class="headerlink" href="#seqenv.analysis.Analysis.search_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>For every sequence, search against a database and return the best hits
+after filtering.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.seq_to_counts">
+<code class="descname">seq_to_counts</code><a class="headerlink" href="#seqenv.analysis.Analysis.seq_to_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary linking every input sequence to its summed normalized concept
+counts dict, provided the input sequence had some hits, and at least one hit had
+some envo number associated. Otherwise it is absent.
+NB: What we want to account for is the fact that two GIs originating from the
+same sequence could be pointing to the same isolation source.
+In such case, we shall count the envo numbers from that isolation source only once.
+We can also avoid counting two GIs that are coming from the same study, if a pubmed
+number is available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.seq_to_gis">
+<code class="descname">seq_to_gis</code><a class="headerlink" href="#seqenv.analysis.Analysis.seq_to_gis" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary linking every input sequence to a list of gi identifiers found
+that are relating to it. If a sequence had no hits it links to an empty list.
+NB: You will get a KeyError if there are sequences in the search result files
+that are not present in the inputed fasta.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.serial_to_concept">
+<code class="descname">serial_to_concept</code><a class="headerlink" href="#seqenv.analysis.Analysis.serial_to_concept" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary linking every concept serial to its concept id.
+Every line in the file contains three columns: serial, concept_type, concept_id.
+An example line: 1007000022 -27 ENVO:00000021</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.analysis.Analysis.unique_gis">
+<code class="descname">unique_gis</code><a class="headerlink" href="#seqenv.analysis.Analysis.unique_gis" title="Permalink to this definition">¶</a></dt>
+<dd><p>A set containing every GI that was found, considering all sequences combined.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.outputs">
+<span id="seqenv-outputs-module"></span><h2>seqenv.outputs module<a class="headerlink" href="#module-seqenv.outputs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.outputs.OutputGenerator">
+<em class="property">class </em><code class="descclassname">seqenv.outputs.</code><code class="descname">OutputGenerator</code><span class="sig-paren">(</span><em>analysis</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/outputs.html#OutputGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.outputs.OutputGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Once the Analysis is done running and all the data is in memory in the
+form of python objects, this object will take care of generating
+all the output files the user could possibly want. You pass it the Analysis
+object obviously.</p>
+<dl class="method">
+<dt id="seqenv.outputs.OutputGenerator.biom_output">
+<code class="descname">biom_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/outputs.html#OutputGenerator.biom_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.outputs.OutputGenerator.biom_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>The same matrix as the user gave in the abundance file, but with source
+information attached for every sequence.
+See <a class="reference external" href="http://biom-format.org">http://biom-format.org</a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.outputs.OutputGenerator.df_sample_names">
+<code class="descname">df_sample_names</code><a class="headerlink" href="#seqenv.outputs.OutputGenerator.df_sample_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dataframe where we operate a matrix multiplication with the abundances
+file provided, to link samples to concept human readable names.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.outputs.OutputGenerator.df_seqs_concepts">
+<code class="descname">df_seqs_concepts</code><a class="headerlink" href="#seqenv.outputs.OutputGenerator.df_seqs_concepts" title="Permalink to this definition">¶</a></dt>
+<dd><p>A normalized dataframe with sequences as columns and concepts (envo terms) as rows.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.outputs.OutputGenerator.float_format">
+<code class="descname">float_format</code><em class="property"> = '%.5g'</em><a class="headerlink" href="#seqenv.outputs.OutputGenerator.float_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.outputs.OutputGenerator.list_sequence_concept">
+<code class="descname">list_sequence_concept</code><span class="sig-paren">(</span><em>name='list_concepts_found.tsv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/outputs.html#OutputGenerator.list_sequence_concept"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.outputs.OutputGenerator.list_sequence_concept" title="Permalink to this definition">¶</a></dt>
+<dd><p>A flat TSV file listing every concept found for every sequence.
+It has one concept per line and looks something like this:
+- OTU1, ENVO:00001, ocean, 4, GIs : [56, 123, 345]
+- OTU1, ENVO:00002, soil, 7, GIs : [22, 44]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.outputs.OutputGenerator.make_all">
+<code class="descname">make_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/outputs.html#OutputGenerator.make_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.outputs.OutputGenerator.make_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Let&#8217;s generate all the files</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.outputs.OutputGenerator.output_3">
+<code class="descname">output_3</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/outputs.html#OutputGenerator.output_3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.outputs.OutputGenerator.output_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possible output #3: the number of terms per OTU
+OTU1: 0
+OTU2: 2
+OTU3: 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.outputs.OutputGenerator.sep">
+<code class="descname">sep</code><em class="property"> = '\t'</em><a class="headerlink" href="#seqenv.outputs.OutputGenerator.sep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.outputs.OutputGenerator.tsv_samples_to_names">
+<code class="descname">tsv_samples_to_names</code><span class="sig-paren">(</span><em>name='samples_to_names.tsv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/outputs.html#OutputGenerator.tsv_samples_to_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.outputs.OutputGenerator.tsv_samples_to_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>A TSV matrix file with matrix above.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.outputs.OutputGenerator.tsv_seq_to_concepts">
+<code class="descname">tsv_seq_to_concepts</code><span class="sig-paren">(</span><em>name='seq_to_concepts.tsv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/outputs.html#OutputGenerator.tsv_seq_to_concepts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.outputs.OutputGenerator.tsv_seq_to_concepts" title="Permalink to this definition">¶</a></dt>
+<dd><p>A TSV matrix file containing the df_seqs_concepts matrix</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.outputs.OutputGenerator.tsv_seq_to_names">
+<code class="descname">tsv_seq_to_names</code><span class="sig-paren">(</span><em>name='seq_to_names.tsv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/outputs.html#OutputGenerator.tsv_seq_to_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.outputs.OutputGenerator.tsv_seq_to_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>A TSV matrix file where we translate the concept to human readable names</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seqenv" title="Permalink to this headline">¶</a></h2>
+<p>This module needs Python 2.7.x</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">seqenv package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-seqenv.analysis">seqenv.analysis module</a></li>
+<li><a class="reference internal" href="#module-seqenv.outputs">seqenv.outputs module</a></li>
+<li><a class="reference internal" href="#module-seqenv">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to seqenv&#8217;s documentation!</a></li>
+      <li>Next: <a href="seqenv.common.html" title="next chapter">seqenv.common package</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/seqenv.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/seqenv.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

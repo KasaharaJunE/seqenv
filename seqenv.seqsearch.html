@@ -1,0 +1,331 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.seqsearch package &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="index.html" />
+    <link rel="up" title="seqenv package" href="seqenv.html" />
+    <link rel="prev" title="seqenv.fasta package" href="seqenv.fasta.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="seqenv-seqsearch-package">
+<h1>seqenv.seqsearch package<a class="headerlink" href="#seqenv-seqsearch-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-seqenv.seqsearch.blast">
+<span id="seqenv-seqsearch-blast-module"></span><h2>seqenv.seqsearch.blast module<a class="headerlink" href="#module-seqenv.seqsearch.blast" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.seqsearch.blast.BLASTquery">
+<em class="property">class </em><code class="descclassname">seqenv.seqsearch.blast.</code><code class="descname">BLASTquery</code><span class="sig-paren">(</span><em>query_path</em>, <em>db_path</em>, <em>params=None</em>, <em>algorithm='blastn'</em>, <em>version='plus'</em>, <em>out_path=None</em>, <em>executable=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/blast.html#BLASTquery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.blast.BLASTquery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A blast job. Possibly the standard BLAST algorithm or
+BLASTP or BLASTX etc. Typically you could use it like this:</p>
+<blockquote>
+<div><p>import sys, os
+records_path = os.path.expanduser(sys.argv[1])
+centers_path = &#8216;centers.fasta&#8217;
+db = parallelblast.BLASTdb(centers_path)
+db.makeblastdb()
+params = {&#8216;executable&#8217;: &#8220;~/share/blastplus/blastn&#8221;,</p>
+<blockquote>
+<div>&#8216;-outfmt&#8217;: 0,
+&#8216;-evalue&#8217;: 1e-2,
+&#8216;-perc_identity&#8217;: 97,
+&#8216;-num_threads&#8217;: 16}</div></blockquote>
+<p>search = parallelblast.BLASTquery(records_path, db, params)
+search.run()</p>
+</div></blockquote>
+<p>You can also call search.non_block_run() to run maybe searches in parallel.</p>
+<dl class="attribute">
+<dt id="seqenv.seqsearch.blast.BLASTquery.command">
+<code class="descname">command</code><a class="headerlink" href="#seqenv.seqsearch.blast.BLASTquery.command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.blast.BLASTquery.filter">
+<code class="descname">filter</code><span class="sig-paren">(</span><em>filtering</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/blast.html#BLASTquery.filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.blast.BLASTquery.filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>We can do some special filtering on the results. For the moment only minimum coverage.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.blast.BLASTquery.non_block_run">
+<code class="descname">non_block_run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/blast.html#BLASTquery.non_block_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.blast.BLASTquery.non_block_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Special method to run the query in a thread without blocking.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.seqsearch.blast.BLASTquery.results">
+<code class="descname">results</code><a class="headerlink" href="#seqenv.seqsearch.blast.BLASTquery.results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the results.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.blast.BLASTquery.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/blast.html#BLASTquery.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.blast.BLASTquery.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.blast.BLASTquery.wait">
+<code class="descname">wait</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/blast.html#BLASTquery.wait"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.blast.BLASTquery.wait" title="Permalink to this definition">¶</a></dt>
+<dd><p>If you have run the query in a non-blocking way, call this method to pause
+until the query is finished.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.seqsearch.parallel">
+<span id="seqenv-seqsearch-parallel-module"></span><h2>seqenv.seqsearch.parallel module<a class="headerlink" href="#module-seqenv.seqsearch.parallel" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.seqsearch.parallel.ParallelSeqSearch">
+<em class="property">class </em><code class="descclassname">seqenv.seqsearch.parallel.</code><code class="descname">ParallelSeqSearch</code><span class="sig-paren">(</span><em>input_fasta</em>, <em>seq_type</em>, <em>database</em>, <em>algorithm='blast'</em>, <em>num_threads=None</em>, <em>filtering=None</em>, <em>out_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/parallel.html#ParallelSeqSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.parallel.ParallelSeqSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seqenv.seqsearch.SeqSearch" title="seqenv.seqsearch.SeqSearch"><code class="xref py py-class docutils literal"><span class="pre">seqenv.seqsearch.SeqSearch</span></code></a></p>
+<p>The same thing as a SeqSearch but operates by chopping the input up into
+smaller pieces and running the algorithm on each piece separately, finally
+joining the outputs.
+In addition, the pieces can be run separately on the local machine, or distributed to different
+compute nodes using the SLURM system.</p>
+<dl class="attribute">
+<dt id="seqenv.seqsearch.parallel.ParallelSeqSearch.blast_queries">
+<code class="descname">blast_queries</code><a class="headerlink" href="#seqenv.seqsearch.parallel.ParallelSeqSearch.blast_queries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make all BLAST search objects.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.parallel.ParallelSeqSearch.join_outputs">
+<code class="descname">join_outputs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/parallel.html#ParallelSeqSearch.join_outputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.parallel.ParallelSeqSearch.join_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Join the outputs</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.seqsearch.parallel.ParallelSeqSearch.queries">
+<code class="descname">queries</code><a class="headerlink" href="#seqenv.seqsearch.parallel.ParallelSeqSearch.queries" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of all the queries to run.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.parallel.ParallelSeqSearch.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/parallel.html#ParallelSeqSearch.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.parallel.ParallelSeqSearch.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the search</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.seqsearch.parallel.ParallelSeqSearch.splitable">
+<code class="descname">splitable</code><a class="headerlink" href="#seqenv.seqsearch.parallel.ParallelSeqSearch.splitable" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input fasta file, but with the ability to split it.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.seqsearch.parallel.ParallelSeqSearch.vsearch_queries">
+<code class="descname">vsearch_queries</code><a class="headerlink" href="#seqenv.seqsearch.parallel.ParallelSeqSearch.vsearch_queries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make all VSEARCH search objects.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.seqsearch.vsearch">
+<span id="seqenv-seqsearch-vsearch-module"></span><h2>seqenv.seqsearch.vsearch module<a class="headerlink" href="#module-seqenv.seqsearch.vsearch" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.seqsearch.vsearch.VSEARCHquery">
+<em class="property">class </em><code class="descclassname">seqenv.seqsearch.vsearch.</code><code class="descname">VSEARCHquery</code><span class="sig-paren">(</span><em>query_path</em>, <em>db_path</em>, <em>params=None</em>, <em>out_path=None</em>, <em>executable=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/vsearch.html#VSEARCHquery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.vsearch.VSEARCHquery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A vsearch job.</p>
+<dl class="attribute">
+<dt id="seqenv.seqsearch.vsearch.VSEARCHquery.command">
+<code class="descname">command</code><a class="headerlink" href="#seqenv.seqsearch.vsearch.VSEARCHquery.command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.vsearch.VSEARCHquery.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch/vsearch.html#VSEARCHquery.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.vsearch.VSEARCHquery.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seqenv.seqsearch">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seqenv.seqsearch" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="seqenv.seqsearch.SeqSearch">
+<em class="property">class </em><code class="descclassname">seqenv.seqsearch.</code><code class="descname">SeqSearch</code><span class="sig-paren">(</span><em>input_fasta</em>, <em>seq_type</em>, <em>database</em>, <em>algorithm='blast'</em>, <em>num_threads=None</em>, <em>filtering=None</em>, <em>out_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch.html#SeqSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.SeqSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A sequence similarity search. Could use different algorithms such
+as BLAST, VSEARCH, BLAT etc.</p>
+<dl class="docutils">
+<dt>Input: - List of sequences in a FASTA file</dt>
+<dd><ul class="first last">
+<li><p class="first">The type of the sequences</p>
+</li>
+<li><p class="first">A database to search against</p>
+</li>
+<li><p class="first">The type of algorithm to use</p>
+</li>
+<li><p class="first">Number of threads to use</p>
+</li>
+<li><p class="first">The desired output path</p>
+</li>
+<li><p class="first">The filtering options:
+* BLAST supported:   - Minimum identity</p>
+<blockquote>
+<div><ul class="simple">
+<li>E value</li>
+<li>Maximum targets</li>
+<li>Minimum query coverage (via manual output format)</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>VSEARCH supported: - ?</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<p>Output: - Sorted list of identifiers in the database (object with significance value and identity attached)</p>
+<dl class="attribute">
+<dt id="seqenv.seqsearch.SeqSearch.blast_params">
+<code class="descname">blast_params</code><a class="headerlink" href="#seqenv.seqsearch.SeqSearch.blast_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary of options to pass to the blast executable.
+The params should depend on the filtering options.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.seqsearch.SeqSearch.blast_query">
+<code class="descname">blast_query</code><a class="headerlink" href="#seqenv.seqsearch.SeqSearch.blast_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a BLAST search object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.SeqSearch.filter">
+<code class="descname">filter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch.html#SeqSearch.filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.SeqSearch.filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter the results accordingly</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.seqsearch.SeqSearch.query">
+<code class="descname">query</code><a class="headerlink" href="#seqenv.seqsearch.SeqSearch.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>The similarity search object with all the relevant parameters.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.seqsearch.SeqSearch.results">
+<code class="descname">results</code><a class="headerlink" href="#seqenv.seqsearch.SeqSearch.results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the results.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seqenv.seqsearch.SeqSearch.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/seqsearch.html#SeqSearch.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.seqsearch.SeqSearch.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the search</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seqenv.seqsearch.SeqSearch.vsearch_query">
+<code class="descname">vsearch_query</code><a class="headerlink" href="#seqenv.seqsearch.SeqSearch.vsearch_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a VSEARCH search object.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">seqenv.seqsearch package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-seqenv.seqsearch.blast">seqenv.seqsearch.blast module</a></li>
+<li><a class="reference internal" href="#module-seqenv.seqsearch.parallel">seqenv.seqsearch.parallel module</a></li>
+<li><a class="reference internal" href="#module-seqenv.seqsearch.vsearch">seqenv.seqsearch.vsearch module</a></li>
+<li><a class="reference internal" href="#module-seqenv.seqsearch">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="seqenv.html">seqenv package</a><ul>
+      <li>Previous: <a href="seqenv.fasta.html" title="previous chapter">seqenv.fasta package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/seqenv.seqsearch.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/seqenv.seqsearch.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

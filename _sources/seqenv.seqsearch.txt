@@ -1,0 +1,38 @@
+seqenv.seqsearch package
+========================
+
+Submodules
+----------
+
+seqenv.seqsearch.blast module
+-----------------------------
+
+.. automodule:: seqenv.seqsearch.blast
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.seqsearch.parallel module
+--------------------------------
+
+.. automodule:: seqenv.seqsearch.parallel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+seqenv.seqsearch.vsearch module
+-------------------------------
+
+.. automodule:: seqenv.seqsearch.vsearch
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: seqenv.seqsearch
+    :members:
+    :undoc-members:
+    :show-inheritance:

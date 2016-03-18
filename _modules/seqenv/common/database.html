@@ -1,0 +1,423 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.common.database &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="../../../index.html" />
+    <link rel="up" title="seqenv.common" href="../common.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seqenv.common.database</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Built-in modules #</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sqlite3</span><span class="o">,</span> <span class="nn">types</span>
+
+<span class="c1"># Internal modules #</span>
+<span class="kn">from</span> <span class="nn">seqenv.common</span>           <span class="kn">import</span> <span class="n">download_from_url</span><span class="p">,</span> <span class="n">md5sum</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.color</span>     <span class="kn">import</span> <span class="n">Color</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.autopaths</span> <span class="kn">import</span> <span class="n">FilePath</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.cache</span>     <span class="kn">import</span> <span class="n">property_cached</span>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="Database"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database">[docs]</a><span class="k">class</span> <span class="nc">Database</span><span class="p">(</span><span class="n">FilePath</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span>
+                       <span class="n">factory</span>   <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                       <span class="n">text_fact</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                       <span class="n">isolation</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                       <span class="n">retrieve</span>  <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                       <span class="n">md5</span>       <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        * The path of the database comes first.</span>
+<span class="sd">        * The factory option enables you to change how results are returned.</span>
+<span class="sd">        * The text_fact option enables you to change text factory (useful for BLOB).</span>
+<span class="sd">        * The Isolation source can be `None` for autocommit mode or one of:</span>
+<span class="sd">        &#39;DEFERRED&#39;, &#39;IMMEDIATE&#39; or &#39;EXCLUSIVE&#39;.</span>
+<span class="sd">        * The retrieve option is an URL at which the database will be downloaded</span>
+<span class="sd">        if it was not found at the `path` given.</span>
+<span class="sd">        * The md5 option is used to check the integrity of a database.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span>      <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text_fact</span> <span class="o">=</span> <span class="n">text_fact</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factory</span>   <span class="o">=</span> <span class="n">factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isolation</span> <span class="o">=</span> <span class="n">isolation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">retrieve</span>  <span class="o">=</span> <span class="n">retrieve</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">md5</span>       <span class="o">=</span> <span class="n">md5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepared</span>  <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when evaluating ``print database``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> object on &quot;</span><span class="si">%s</span><span class="s1">&quot;&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when entering the &#39;with&#39; statement.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">errtype</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when exiting the &#39;with&#39; statement.</span>
+<span class="sd">        Enables us to close the database properly, even when</span>
+<span class="sd">        exceptions are raised.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when evaluating ``for x in database: pass``.&quot;&quot;&quot;</span>
+        <span class="n">new_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">new_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT * from &quot;</span><span class="si">%s</span><span class="s1">&quot;;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_cursor</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when evaluating ``&quot;P81239A&quot; in database``.&quot;&quot;&quot;</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="s1">&#39;SELECT EXISTS(SELECT 1 FROM &quot;</span><span class="si">%s</span><span class="s1">&quot; WHERE id==&quot;</span><span class="si">%s</span><span class="s1">&quot; LIMIT 1);&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">command</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_table</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when evaluating ``len(database)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_entries</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when evaluating ``if database: pass``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when evaluating ``database[0] or database[&#39;P81239A&#39;]``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c1"># ------------------------------ Properties ----------------------------- #</span>
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;To be used externally by the user.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_connection</span><span class="p">()</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">own_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;To be used internally in this object.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_connection</span><span class="p">()</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">cursor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;To be used externally by the user.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">own_cursor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;To be used internally in this object.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The complete list of SQL tables.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_connection</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Row</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT name from sqlite_master where type=&quot;table&quot;;&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_connection</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factory</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">main_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;data&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The list of columns available in every entry.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_columns_of_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_table</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">first</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just the first entry.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_first</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">last</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just the last entry.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_last</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The main table as a blaze data structure. Not ready yet.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+        <span class="c1">#return blaze.Data(&#39;sqlite:///%s::%s&#39;) % (self.path, self.main_table)</span>
+
+    <span class="c1"># ------------------------------- Methods ------------------------------- #</span>
+<div class="viewcode-block" id="Database.new_connection"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.new_connection">[docs]</a>    <span class="k">def</span> <span class="nf">new_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a new connection.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepared</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">isolation_level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">isolation</span><span class="p">)</span>
+        <span class="n">con</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factory</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_fact</span><span class="p">:</span> <span class="n">con</span><span class="o">.</span><span class="n">text_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_fact</span>
+        <span class="k">return</span> <span class="n">con</span></div>
+
+<div class="viewcode-block" id="Database.prepare"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check that the file exists, optionally downloads it.</span>
+<span class="sd">        Checks that the file is indeed an SQLite3 database.</span>
+<span class="sd">        Optionally check the MD5.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieve</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s2">&quot;Downloading SQLite3 database...&quot;</span>
+                <span class="n">download_from_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">retrieve</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The file &#39;&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;&#39; does not exist.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_format</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">md5</span><span class="p">:</span> <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">md5</span> <span class="o">==</span> <span class="n">md5sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepared</span> <span class="o">=</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="Database.check_format"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.check_format">[docs]</a>    <span class="k">def</span> <span class="nf">check_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_bytes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span> <span class="n">header</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header</span> <span class="o">!=</span> <span class="s1">&#39;SQLite format 3&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The file &#39;&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;&#39; is not an SQLite database.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.create"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">type_map</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new database with a certain schema.&quot;&quot;&quot;</span>
+        <span class="c1"># Check already exists #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_bytes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;File exists already at &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># Make the table #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_table</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">,</span> <span class="n">type_map</span><span class="o">=</span><span class="n">type_map</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.add_table"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.add_table">[docs]</a>    <span class="k">def</span> <span class="nf">add_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">type_map</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">if_not_exists</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add add a new table to the database.  For instance you could do this:</span>
+<span class="sd">        self.add_table(&#39;data&#39;, {&#39;id&#39;:&#39;integer&#39;, &#39;source&#39;:&#39;text&#39;, &#39;pubmed&#39;:&#39;integer&#39;})&quot;&quot;&quot;</span>
+        <span class="c1"># Check types mapping #</span>
+        <span class="k">if</span> <span class="n">type_map</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span> <span class="n">types</span> <span class="o">=</span> <span class="n">columns</span>
+        <span class="k">if</span> <span class="n">type_map</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>                               <span class="n">types</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Safe or unsafe #</span>
+        <span class="k">if</span> <span class="n">if_not_exists</span><span class="p">:</span> <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;CREATE TABLE IF NOT EXISTS &quot;</span><span class="si">%s</span><span class="s1">&quot; (</span><span class="si">%s</span><span class="s1">);&#39;</span>
+        <span class="k">else</span><span class="p">:</span>             <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;CREATE table &quot;</span><span class="si">%s</span><span class="s1">&quot; (</span><span class="si">%s</span><span class="s1">);&#39;</span>
+        <span class="c1"># Do it #</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&quot;&#39;</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_table</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Database.execute"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convenience shortcut.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.get_columns_of_table"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.get_columns_of_table">[docs]</a>    <span class="k">def</span> <span class="nf">get_columns_of_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the list of columns for a particular table</span>
+<span class="sd">        by querying the SQL for the complete list of column names.&quot;&quot;&quot;</span>
+        <span class="c1"># Check the table exists #</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">:</span> <span class="k">return</span> <span class="p">[]</span>
+        <span class="c1"># A PRAGMA statement will implicitly issue a commit, don&#39;t use #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT * from &quot;</span><span class="si">%s</span><span class="s1">&quot; LIMIT 1;&#39;</span> <span class="o">%</span> <span class="n">table</span><span class="p">)</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">columns</span></div>
+
+<div class="viewcode-block" id="Database.add"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add entries to a table.</span>
+<span class="sd">        The *entries* variable should be an iterable.&quot;&quot;&quot;</span>
+        <span class="c1"># Default table and columns #</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>   <span class="n">table</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span>
+        <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_columns_of_table</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+        <span class="c1"># Default columns #</span>
+        <span class="n">question_marks</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;?&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">)</span>
+        <span class="n">cols</span>           <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">)</span>
+        <span class="n">ignore</span>         <span class="o">=</span> <span class="s2">&quot; OR IGNORE&quot;</span> <span class="k">if</span> <span class="n">ignore</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">sql_command</span>    <span class="o">=</span> <span class="s1">&#39;INSERT</span><span class="si">%s</span><span class="s1"> into &quot;</span><span class="si">%s</span><span class="s1">&quot;(</span><span class="si">%s</span><span class="s1">) VALUES (</span><span class="si">%s</span><span class="s1">);&#39;</span>
+        <span class="n">sql_command</span>    <span class="o">=</span> <span class="n">sql_command</span> <span class="o">%</span> <span class="p">(</span><span class="n">ignore</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">question_marks</span><span class="p">)</span>
+        <span class="c1"># Possible errors we want to catch #</span>
+        <span class="n">errors</span>  <span class="o">=</span> <span class="p">(</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">,</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">ProgrammingError</span><span class="p">)</span>
+        <span class="n">errors</span> <span class="o">+=</span> <span class="p">(</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">IntegrityError</span><span class="p">,</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">InterfaceError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span>
+        <span class="c1"># Do it #</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">new_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+            <span class="n">new_cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="n">sql_command</span><span class="p">,</span> <span class="n">entries</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">errors</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detailed_error</span><span class="p">(</span><span class="n">sql_command</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">entries</span><span class="p">,</span> <span class="n">err</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s2">&quot;You interrupted the data insertion.&quot;</span>
+            <span class="k">print</span> <span class="s2">&quot;Committing everything done up to this point.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">own_connection</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">err</span></div>
+
+<div class="viewcode-block" id="Database.detailed_error"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.detailed_error">[docs]</a>    <span class="k">def</span> <span class="nf">detailed_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql_command</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">entries</span><span class="p">,</span> <span class="n">err</span><span class="p">):</span>
+        <span class="c1"># The command #</span>
+        <span class="n">message1</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2"> The command </span><span class="se">\n</span><span class="s2"> &lt;</span><span class="si">%s%s%s</span><span class="s2">&gt; </span><span class="se">\n</span><span class="s2"> on the database &#39;</span><span class="si">%s</span><span class="s2">&#39; failed.&quot;</span>
+        <span class="n">params</span>   <span class="o">=</span> <span class="p">(</span><span class="n">Color</span><span class="o">.</span><span class="n">cyn</span><span class="p">,</span> <span class="n">sql_command</span><span class="p">,</span> <span class="n">Color</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">message1</span> <span class="o">=</span> <span class="n">message1</span> <span class="o">%</span> <span class="n">params</span>
+        <span class="c1"># The bindings #</span>
+        <span class="n">message2</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> * </span><span class="si">%s</span><span class="s2">The bindings (</span><span class="si">%i</span><span class="s2">) </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> * </span><span class="si">%s</span><span class="s2">You gave</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="n">params</span>   <span class="o">=</span> <span class="p">(</span><span class="n">Color</span><span class="o">.</span><span class="n">b_ylw</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">),</span> <span class="n">Color</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+        <span class="n">params</span>  <span class="o">+=</span> <span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">Color</span><span class="o">.</span><span class="n">b_ylw</span><span class="p">,</span> <span class="n">Color</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">entries</span><span class="p">)</span>
+        <span class="n">message2</span> <span class="o">=</span> <span class="n">message2</span> <span class="o">%</span> <span class="n">params</span>
+        <span class="c1"># The first element #</span>
+        <span class="n">message3</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> * </span><span class="si">%s</span><span class="s2">Example element (</span><span class="si">%i</span><span class="s2">)</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">elem</span>     <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">GeneratorType</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span> <span class="n">elem</span> <span class="o">=</span> <span class="n">entries</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span> <span class="k">pass</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="n">entries</span><span class="p">:</span>
+            <span class="n">elem</span> <span class="o">=</span> <span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">params</span>   <span class="o">=</span>  <span class="p">(</span><span class="n">Color</span><span class="o">.</span><span class="n">b_ylw</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span> <span class="k">if</span> <span class="n">elem</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span> <span class="n">Color</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+        <span class="n">message3</span> <span class="o">=</span> <span class="n">message3</span> <span class="o">%</span> <span class="n">params</span>
+        <span class="c1"># The original error #</span>
+        <span class="n">message4</span> <span class="o">=</span> <span class="s2">&quot;The original error was:</span><span class="se">\n</span><span class="s2"> </span><span class="si">%s%s%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Color</span><span class="o">.</span><span class="n">u_red</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">Color</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+        <span class="c1"># Return #</span>
+        <span class="k">return</span> <span class="n">message1</span> <span class="o">+</span> <span class="n">message2</span> <span class="o">+</span> <span class="n">message3</span> <span class="o">+</span> <span class="n">message4</span></div>
+
+<div class="viewcode-block" id="Database.add_by_steps"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.add_by_steps">[docs]</a>    <span class="k">def</span> <span class="nf">add_by_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries_by_step</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add entries to the main table.</span>
+<span class="sd">        The *entries* variable should be an iterable yielding iterables.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">entries</span> <span class="ow">in</span> <span class="n">entries_by_step</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.count_entries"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.count_entries">[docs]</a>    <span class="k">def</span> <span class="nf">count_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;How many rows in a table.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT COUNT(1) FROM &quot;</span><span class="si">%s</span><span class="s1">&quot;;&#39;</span> <span class="o">%</span> <span class="n">table</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Database.index"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span>
+        <span class="n">index_name</span> <span class="o">=</span> <span class="n">table</span> <span class="o">+</span> <span class="s1">&#39;_index&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="s1">&#39;CREATE INDEX if not exists &quot;</span><span class="si">%s</span><span class="s1">&quot; on &quot;</span><span class="si">%s</span><span class="s1">&quot; (</span><span class="si">%s</span><span class="s1">);&#39;</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="n">command</span> <span class="o">%</span> <span class="p">(</span><span class="n">index_name</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s2">&quot;You interrupted the creation of the index. Not committing.&quot;</span>
+            <span class="k">raise</span> <span class="n">err</span></div>
+
+<div class="viewcode-block" id="Database.get_first"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.get_first">[docs]</a>    <span class="k">def</span> <span class="nf">get_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just the first entry.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM &quot;</span><span class="si">%s</span><span class="s1">&quot; LIMIT 1;&#39;</span> <span class="o">%</span> <span class="n">table</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Database.get_last"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.get_last">[docs]</a>    <span class="k">def</span> <span class="nf">get_last</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just the last entry.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM &quot;</span><span class="si">%s</span><span class="s1">&quot; ORDER BY ROWID DESC LIMIT 1;&#39;</span> <span class="o">%</span> <span class="n">table</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Database.get_number"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.get_number">[docs]</a>    <span class="k">def</span> <span class="nf">get_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a specific entry by it&#39;s number.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT * from &quot;</span><span class="si">%s</span><span class="s1">&quot; LIMIT 1 OFFSET </span><span class="si">%i</span><span class="s1">;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_table</span><span class="p">,</span> <span class="n">num</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Database.get"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Database.get_entry"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.get_entry">[docs]</a>    <span class="k">def</span> <span class="nf">get_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a specific entry.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>  <span class="n">table</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_table</span>
+        <span class="k">if</span> <span class="n">column</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">column</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span> <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * from &quot;</span><span class="si">%s</span><span class="s1">&quot; where &quot;</span><span class="si">%s</span><span class="s1">&quot;==&quot;</span><span class="si">%s</span><span class="s1">&quot; LIMIT 1;&#39;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span> <span class="o">%</span> <span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Database.vacuum"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.vacuum">[docs]</a>    <span class="k">def</span> <span class="nf">vacuum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compact the database, remove old transactions.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;VACUUM&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.close"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">own_connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+    <span class="c1"># ----------------------------- Unfinished ------------------------------ #</span>
+<div class="viewcode-block" id="Database.add_column"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.add_column">[docs]</a>    <span class="k">def</span> <span class="nf">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add add a new column to a table.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Database.open"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reopen a database that was closed, useful for debugging.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Database.uniquify"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.uniquify">[docs]</a>    <span class="k">def</span> <span class="nf">uniquify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove entries that have duplicate values on a specific column.&quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;DELETE from &quot;data&quot; WHERE rowid not in (select min(rowid) from data group by id);&#39;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Database.get_and_order"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.database.Database.get_and_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_and_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get specific entries and order them in the same way.&quot;&quot;&quot;</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT rowid, * from &quot;data&quot;</span>
+<span class="s2">        WHERE rowid in (</span><span class="si">%s</span><span class="s2">)</span>
+<span class="s2">        ORDER BY CASE rowid</span>
+<span class="s2">        </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">        END;</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">ordered</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="n">ids</span><span class="p">))</span>
+        <span class="n">rowids</span>  <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;WHEN &#39;</span><span class="si">%s</span><span class="s2">&#39; THEN </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">command</span> <span class="o">%</span> <span class="p">(</span><span class="n">ordered</span><span class="p">,</span> <span class="n">rowids</span><span class="p">)</span></div></div>
+        <span class="c1"># This could have worked but sqlite3 was too old on the server</span>
+        <span class="c1"># ORDER BY instr(&#39;,%s,&#39;, &#39;,&#39; || id || &#39;,&#39;)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../common.html">seqenv.common</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

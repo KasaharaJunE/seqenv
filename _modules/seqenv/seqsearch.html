@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.seqsearch &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seqenv.seqsearch</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Built-in modules #</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+
+<span class="c1"># Internal modules #</span>
+<span class="kn">from</span> <span class="nn">seqenv.seqsearch.blast</span> <span class="kn">import</span> <span class="n">BLASTquery</span>
+<span class="kn">from</span> <span class="nn">seqenv.seqsearch.vsearch</span> <span class="kn">import</span> <span class="n">VSEARCHquery</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.cache</span> <span class="kn">import</span> <span class="n">property_cached</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.autopaths</span> <span class="kn">import</span> <span class="n">FilePath</span>
+
+<span class="c1"># Third party modules #</span>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="SeqSearch"><a class="viewcode-back" href="../../seqenv.seqsearch.html#seqenv.seqsearch.SeqSearch">[docs]</a><span class="k">class</span> <span class="nc">SeqSearch</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A sequence similarity search. Could use different algorithms such</span>
+<span class="sd">    as BLAST, VSEARCH, BLAT etc.</span>
+
+<span class="sd">    Input: - List of sequences in a FASTA file</span>
+<span class="sd">           - The type of the sequences</span>
+<span class="sd">           - A database to search against</span>
+<span class="sd">           - The type of algorithm to use</span>
+<span class="sd">           - Number of threads to use</span>
+<span class="sd">           - The desired output path</span>
+<span class="sd">           - The filtering options:</span>
+<span class="sd">             * BLAST supported:   - Minimum identity</span>
+<span class="sd">                                  - E value</span>
+<span class="sd">                                  - Maximum targets</span>
+<span class="sd">                                  - Minimum query coverage (via manual output format)</span>
+<span class="sd">             * VSEARCH supported: - ?</span>
+<span class="sd">    Output: - Sorted list of identifiers in the database (object with significance value and identity attached)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_fasta</span><span class="p">,</span> <span class="n">seq_type</span><span class="p">,</span> <span class="n">database</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;blast&#39;</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filtering</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c1"># Base parameters #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_fasta</span> <span class="o">=</span> <span class="n">input_fasta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_type</span> <span class="o">=</span> <span class="n">seq_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span> <span class="o">=</span> <span class="n">database</span>
+        <span class="c1"># Optional #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span>
+        <span class="c1"># The filtering options #</span>
+        <span class="k">if</span> <span class="n">filtering</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span> <span class="o">=</span> <span class="n">filtering</span>
+        <span class="c1"># Number of cores to use #</span>
+        <span class="k">if</span> <span class="n">num_threads</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="n">num_threads</span>
+        <span class="c1"># Output path #</span>
+        <span class="k">if</span> <span class="n">out_path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span> <span class="o">=</span> <span class="n">FilePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_fasta</span><span class="o">.</span><span class="n">prefix_path</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">algorithm</span> <span class="o">+</span> <span class="s1">&#39;out&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span> <span class="o">=</span> <span class="n">FilePath</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The similarity search object with all the relevant parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;blast&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">blast_query</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;vsearch&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vsearch_query</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">)</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">blast_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary of options to pass to the blast executable.</span>
+<span class="sd">        The params should depend on the filtering options.&quot;&quot;&quot;</span>
+        <span class="c1"># Initialize #</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Defaults #</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;-num_threads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;-dust&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;no&#39;</span>
+        <span class="c1"># Conditionals #</span>
+        <span class="k">if</span> <span class="s1">&#39;e_value&#39;</span>      <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;-evalue&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">[</span><span class="s1">&#39;e_value&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;max_targets&#39;</span>  <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;-max_target_seqs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">[</span><span class="s1">&#39;max_targets&#39;</span><span class="p">]</span>
+        <span class="c1"># Depends on sequence type #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_type</span> <span class="o">==</span> <span class="s1">&#39;nucl&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;min_identity&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;-perc_identity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">[</span><span class="s1">&#39;min_identity&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span>
+        <span class="c1"># Output format #</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;-outfmt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs staxids&quot;</span>
+        <span class="c1"># Return #</span>
+        <span class="k">return</span> <span class="n">params</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">blast_query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a BLAST search object.&quot;&quot;&quot;</span>
+        <span class="c1"># Sequence type #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_type</span> <span class="o">==</span> <span class="s1">&#39;nucl&#39;</span><span class="p">:</span> <span class="n">blast_algo</span> <span class="o">=</span> <span class="s1">&#39;blastn&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_type</span> <span class="o">==</span> <span class="s1">&#39;prot&#39;</span><span class="p">:</span> <span class="n">blast_algo</span> <span class="o">=</span> <span class="s1">&#39;blastp&#39;</span>
+        <span class="c1"># The query object #</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">BLASTquery</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_fasta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blast_params</span><span class="p">,</span> <span class="n">blast_algo</span><span class="p">,</span> <span class="s2">&quot;plus&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">query</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">vsearch_query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a VSEARCH search object.&quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">VSEARCHquery</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_fasta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">query</span>
+
+<div class="viewcode-block" id="SeqSearch.run"><a class="viewcode-back" href="../../seqenv.seqsearch.html#seqenv.seqsearch.SeqSearch.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the search&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SeqSearch.filter"><a class="viewcode-back" href="../../seqenv.seqsearch.html#seqenv.seqsearch.SeqSearch.filter">[docs]</a>    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Filter the results accordingly&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the results.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">results</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

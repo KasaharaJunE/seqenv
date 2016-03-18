@@ -1,0 +1,502 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.analysis &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seqenv.analysis</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Futures #</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="c1"># Built-in modules #</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">multiprocessing</span><span class="o">,</span> <span class="nn">warnings</span><span class="o">,</span> <span class="nn">marshal</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">cPickle</span> <span class="kn">as</span> <span class="nn">pickle</span>
+
+<span class="c1"># Internal modules #</span>
+<span class="kn">from</span> <span class="nn">seqenv</span>                    <span class="kn">import</span> <span class="n">module_dir</span><span class="p">,</span> <span class="n">version_string</span><span class="p">,</span> <span class="n">git_repo</span>
+<span class="kn">from</span> <span class="nn">seqenv.fasta</span>              <span class="kn">import</span> <span class="n">FASTA</span>
+<span class="kn">from</span> <span class="nn">seqenv.outputs</span>            <span class="kn">import</span> <span class="n">OutputGenerator</span>
+<span class="kn">from</span> <span class="nn">seqenv.seqsearch.parallel</span> <span class="kn">import</span> <span class="n">ParallelSeqSearch</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.cache</span>       <span class="kn">import</span> <span class="n">property_cached</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.timer</span>       <span class="kn">import</span> <span class="n">Timer</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.autopaths</span>   <span class="kn">import</span> <span class="n">FilePath</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.database</span>    <span class="kn">import</span> <span class="n">Database</span>
+
+<span class="c1"># Third party modules #</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="Analysis"><a class="viewcode-back" href="../../seqenv.html#seqenv.analysis.Analysis">[docs]</a><span class="k">class</span> <span class="nc">Analysis</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The main object. The only mandatory argument is the input fasta file path.</span>
+<span class="sd">    The text below is somewhat redundant with what is in the README file and also</span>
+<span class="sd">    the text in the command line script.</span>
+
+<span class="sd">    * &#39;seq_type&#39;: Either `nucl` or `prot`. Defaults to `nucl`.</span>
+
+<span class="sd">    * `search_algo`: Either &#39;blast&#39; or &#39;usearch&#39;. Defaults to `blast`.</span>
+
+<span class="sd">    * `search_db`: The path to the database to search against. Defaults to `nt`.</span>
+
+<span class="sd">    * `normalization`: Can be either of `flat`, `ui` or `upui`.</span>
+<span class="sd">      This option defaults to `ui`.</span>
+<span class="sd">         * If you choose `flat`, we will count every isolation source independently,</span>
+<span class="sd">           even if the same text appears several times for the same input sequence.</span>
+<span class="sd">         * If you choose `ui`, standing for unique isolation, we will count every</span>
+<span class="sd">           identical isolation source only once within the same input sequence.</span>
+<span class="sd">         * If you choose `upui`, standing for unique isolation and unique pubmed-ID,</span>
+<span class="sd">           we will uniquify the counts based on the text entry of the isolation</span>
+<span class="sd">           sources as well as on the pubmed identifiers from which the GI obtained.</span>
+
+<span class="sd">    * `relative`: Should we divide the counts of every input sequence by the</span>
+<span class="sd">                      number of envo terms that were associated to it.</span>
+<span class="sd">                      Defaults to `True`.</span>
+
+<span class="sd">    * `proportional`: Should we divide the counts of every input sequence by the</span>
+<span class="sd">                      number of envo terms that were associated to it.</span>
+<span class="sd">                      Defaults to `True`.</span>
+
+<span class="sd">    * `backtracking`: For every term identified by the tagger, we will propagate</span>
+<span class="sd">                      frequency counts up the acyclic directed graph described by</span>
+<span class="sd">                      the ontology. Defaults to `False`.</span>
+
+<span class="sd">    * `num_threads`: The number of threads. Default to the number of cores on the</span>
+<span class="sd">                     current machine.</span>
+
+<span class="sd">    * `out_dir`: Place all the outputs in the specified directory.</span>
+<span class="sd">                 Defaults to the input file&#39;s directory.</span>
+
+<span class="sd">    * Sequence similarity search filtering options:</span>
+<span class="sd">        - min_identity: Defaults to 0.97</span>
+<span class="sd">        - e_value: Defaults to 0.0001</span>
+<span class="sd">        - max_targets: Defaults to 10</span>
+<span class="sd">        - min_coverage: Defaults to 0.97</span>
+
+<span class="sd">    * `abundances`: If you have sample information, then you can provide the</span>
+<span class="sd">                    &#39;abundances&#39; argument too. It should be a TSV file with OTUs</span>
+<span class="sd">                    as rows and sample names as columns.</span>
+
+<span class="sd">    * `N`: Use only the top `N` sequences in terms of their abundance, discard</span>
+<span class="sd">           the rest. Only valid if abundances are provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;&lt;Analysis object on &quot;</span><span class="si">%s</span><span class="s1">&quot; with </span><span class="si">%i</span><span class="s1"> sequences&gt;&#39;</span> <span class="o">%</span> \
+                        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file</span><span class="p">,</span>
+                 <span class="n">seq_type</span>      <span class="o">=</span> <span class="s1">&#39;nucl&#39;</span><span class="p">,</span>
+                 <span class="n">search_algo</span>   <span class="o">=</span> <span class="s1">&#39;blast&#39;</span><span class="p">,</span>
+                 <span class="n">search_db</span>     <span class="o">=</span> <span class="s1">&#39;nt&#39;</span><span class="p">,</span>
+                 <span class="n">normalization</span> <span class="o">=</span> <span class="s1">&#39;ui&#39;</span><span class="p">,</span>
+                 <span class="n">proportional</span>  <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+                 <span class="n">backtracking</span>  <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
+                 <span class="n">num_threads</span>   <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                 <span class="n">out_dir</span>       <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                 <span class="n">min_identity</span>  <span class="o">=</span> <span class="mf">0.97</span><span class="p">,</span>
+                 <span class="n">e_value</span>       <span class="o">=</span> <span class="mf">0.0001</span><span class="p">,</span>
+                 <span class="n">max_targets</span>   <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+                 <span class="n">min_coverage</span>  <span class="o">=</span> <span class="mf">0.97</span><span class="p">,</span>
+                 <span class="n">abundances</span>    <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                 <span class="n">N</span>             <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="c1"># Base parameters #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span> <span class="o">=</span> <span class="n">FASTA</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">must_exist</span><span class="p">()</span>
+        <span class="c1"># Abundance file #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abundances</span> <span class="o">=</span> <span class="n">FilePath</span><span class="p">(</span><span class="n">abundances</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abundances</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">abundances</span><span class="o">.</span><span class="n">must_exist</span><span class="p">()</span>
+        <span class="c1"># Other parameters #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_type</span> <span class="o">=</span> <span class="n">seq_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backtracking</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">backtracking</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proportional</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">proportional</span><span class="p">)</span>
+        <span class="c1"># Normalization parameters #</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;flat&#39;</span><span class="p">,</span> <span class="s1">&#39;ui&#39;</span><span class="p">,</span> <span class="s1">&#39;upui&#39;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;Normalization has to be one of </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">options</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">normalization</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">=</span> <span class="n">normalization</span>
+        <span class="c1"># Search parameters #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_algo</span> <span class="o">=</span> <span class="n">search_algo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_db</span> <span class="o">=</span> <span class="n">search_db</span>
+        <span class="c1"># Number of cores to use #</span>
+        <span class="k">if</span> <span class="n">num_threads</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">(),</span> <span class="mi">32</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_threads</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+        <span class="c1"># Hit filtering parameters #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_identity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">min_identity</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_value</span>      <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">e_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_targets</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_targets</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_coverage</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">min_coverage</span><span class="p">)</span>
+        <span class="c1"># Time the pipeline execution #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">()</span>
+        <span class="c1"># Keep all outputs in a directory #</span>
+        <span class="k">if</span> <span class="n">out_dir</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">directory</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">=</span> <span class="n">out_dir</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">):</span> <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">)</span>
+        <span class="c1"># The object that can make the outputs for the user #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">OutputGenerator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Analysis.run"><a class="viewcode-back" href="../../seqenv.html#seqenv.analysis.Analysis.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A method to run the whole pipeline. As everything is coded in a functional</span>
+<span class="sd">        style, we just need to make a call to `outputs.make_all` and everything will be</span>
+<span class="sd">        generated automatically, in a reverse fashion.&quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="n">version_string</span> <span class="o">+</span> <span class="s2">&quot; (pid </span><span class="si">%i</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">git_repo</span><span class="p">:</span> <span class="k">print</span> <span class="s2">&quot;The exact version of the code is: &quot;</span> <span class="o">+</span> <span class="n">git_repo</span><span class="o">.</span><span class="n">short_hash</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">make_all</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s2">&quot;------------</span><span class="se">\n</span><span class="s2">Success. Outputs are in &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_end</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_total_elapsed</span><span class="p">()</span></div>
+
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># orig_names_to_renamed</span>
+    <span class="c1"># renamed_to_orig</span>
+    <span class="c1"># renamed_fasta</span>
+    <span class="c1"># df_abundances</span>
+    <span class="c1"># only_top_sequences</span>
+    <span class="c1"># filtering</span>
+    <span class="c1"># search</span>
+    <span class="c1"># search_results</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">orig_names_to_renamed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary linking every sequence&#39;s name in the input FASTA to a</span>
+<span class="sd">        new name following the scheme &quot;C1&quot;, &quot;C2&quot;, &quot;C3&quot; etc.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">seq</span><span class="o">.</span><span class="n">id</span><span class="p">:</span><span class="s2">&quot;C</span><span class="si">%i</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="p">)}</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">renamed_to_orig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The opposite of the above dictionary&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_names_to_renamed</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">renamed_fasta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a new fasta file where every name in the input FASTA file is replaced</span>
+<span class="sd">        with &quot;C1&quot;, &quot;C2&quot;, &quot;C3&quot; etc. Returns this new FASTA file.&quot;&quot;&quot;</span>
+        <span class="n">renamed_fasta</span> <span class="o">=</span> <span class="n">FASTA</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="s1">&#39;renamed.fasta&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">renamed_fasta</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span> <span class="k">return</span> <span class="n">renamed_fasta</span>
+        <span class="k">print</span> <span class="s2">&quot;--&gt; STEP 1: Parse the input FASTA file.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">rename_sequences</span><span class="p">(</span><span class="n">renamed_fasta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_names_to_renamed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_elapsed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">renamed_fasta</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">df_abundances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A pandas DataFrame object containing the abundance counts</span>
+<span class="sd">        with OTUs as rows and sample names as columns.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">abundances</span>
+        <span class="k">return</span> <span class="n">pandas</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">parsers</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abundances</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">only_top_sequences</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a new fasta file where only the top N sequences are included</span>
+<span class="sd">        (in terms of their abundance). Skipped if no abundance info is given.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">abundances</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">renamed_fasta</span>
+        <span class="n">only_top_fasta</span> <span class="o">=</span> <span class="n">FASTA</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="s1">&#39;top_seqs.fasta&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">only_top_fasta</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span> <span class="k">return</span> <span class="n">only_top_fasta</span>
+        <span class="c1"># Use the default in case it was not provided #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="k">else</span><span class="p">:</span>              <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="c1"># Print status #</span>
+        <span class="k">print</span> <span class="s2">&quot;Using: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">renamed_fasta</span>
+        <span class="k">print</span> <span class="s2">&quot;--&gt; STEP 1B: Get the top </span><span class="si">%i</span><span class="s2"> sequences (in terms of their abundances).&quot;</span> <span class="o">%</span> <span class="n">N</span>
+        <span class="c1"># Check the user inputted value #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">count</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;You asked for the top </span><span class="si">%i</span><span class="s2"> sequences&quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;, but your input file only contains </span><span class="si">%i</span><span class="s2"> sequences!&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="o">.</span><span class="n">count</span>
+        <span class="c1"># Do it #</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_abundances</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">N</span><span class="p">]</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_names_to_renamed</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">renamed_fasta</span><span class="o">.</span><span class="n">extract_sequences</span><span class="p">(</span><span class="n">only_top_fasta</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_elapsed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">only_top_fasta</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">filtering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dictionary with the filtering options for the sequence similarity</span>
+<span class="sd">        search.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;min_identity&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_identity</span><span class="p">,</span>
+                <span class="s1">&#39;e_value&#39;</span><span class="p">:</span>      <span class="bp">self</span><span class="o">.</span><span class="n">e_value</span><span class="p">,</span>
+                <span class="s1">&#39;max_targets&#39;</span><span class="p">:</span>  <span class="bp">self</span><span class="o">.</span><span class="n">max_targets</span><span class="p">,</span>
+                <span class="s1">&#39;min_coverage&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_coverage</span><span class="p">}</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The similarity search object with all the relevant parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ParallelSeqSearch</span><span class="p">(</span><span class="n">input_fasta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_top_sequences</span><span class="p">,</span>
+                                 <span class="n">seq_type</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_type</span><span class="p">,</span>
+                                 <span class="n">algorithm</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_algo</span><span class="p">,</span>
+                                 <span class="n">database</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_db</span><span class="p">,</span>
+                                 <span class="n">num_threads</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span><span class="p">,</span>
+                                 <span class="n">filtering</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">search_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;For every sequence, search against a database and return the best hits</span>
+<span class="sd">        after filtering.&quot;&quot;&quot;</span>
+        <span class="c1"># Check that the search was run #</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">out_path</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s2">&quot;Using: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_top_sequences</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;--&gt; STEP 2: Similarity search against the &#39;</span><span class="si">%s</span><span class="s2">&#39; database with </span><span class="si">%i</span><span class="s2"> processes&quot;</span>
+            <span class="k">print</span> <span class="n">message</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search_db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_elapsed</span><span class="p">()</span>
+            <span class="k">print</span> <span class="s2">&quot;--&gt; STEP 3: Filter out bad hits from the search results&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">filter</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_elapsed</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">out_path</span><span class="o">.</span><span class="n">count_bytes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Found exactly zero hits after the similarity search.&quot;</span><span class="p">)</span>
+        <span class="c1"># Parse the results #</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">results</span>
+
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># seq_to_gis</span>
+    <span class="c1"># unique_gis</span>
+    <span class="c1"># source_database</span>
+    <span class="c1"># gis_with_envos</span>
+    <span class="c1"># seq_to_counts</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">seq_to_gis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary linking every input sequence to a list of gi identifiers found</span>
+<span class="sd">        that are relating to it. If a sequence had no hits it links to an empty list.</span>
+<span class="sd">        NB: You will get a KeyError if there are sequences in the search result files</span>
+<span class="sd">        that are not present in the inputed fasta.&quot;&quot;&quot;</span>
+        <span class="n">seq_to_gis</span> <span class="o">=</span> <span class="n">FilePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="s1">&#39;seq_to_gis.pickle&#39;</span><span class="p">)</span>
+        <span class="c1"># Check that is was run #</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">seq_to_gis</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">search_results</span>
+            <span class="k">print</span> <span class="s2">&quot;--&gt; STEP 4: Parsing the search results&quot;</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">seq</span><span class="p">:[]</span> <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_top_sequences</span><span class="o">.</span><span class="n">ids</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">hit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_results</span><span class="p">:</span>
+                <span class="n">seq_name</span> <span class="o">=</span> <span class="n">hit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">gi</span> <span class="o">=</span> <span class="n">hit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">seq_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gi</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">seq_to_gis</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">handle</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_elapsed</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="c1"># Parse the results #</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">seq_to_gis</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">unique_gis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A set containing every GI that was found, considering all sequences combined.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">gi</span> <span class="k">for</span> <span class="n">gis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_to_gis</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">gi</span> <span class="ow">in</span> <span class="n">gis</span><span class="p">)</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The sqlite3 database containing every GI number in all NCBI that has an</span>
+<span class="sd">        isolation source associated to it. In addition, the pubmed-ID is listed too</span>
+<span class="sd">        if there is one. If we don&#39;t have it locally already, we will go download it.</span>
+<span class="sd">        Thus, the database containing two tables:</span>
+
+<span class="sd">        CREATE TABLE &quot;gi&quot;</span>
+<span class="sd">            (</span>
+<span class="sd">              &quot;id&quot;      INTEGER PRIMARY KEY NOT NULL,</span>
+<span class="sd">              &quot;isokey&quot;  INTEGER NOT NULL REFERENCES &quot;isolation&quot;(&quot;id&quot;),</span>
+<span class="sd">              &quot;pubmed&quot;  INTEGER</span>
+<span class="sd">            );</span>
+<span class="sd">        CREATE TABLE &quot;isolation&quot;</span>
+<span class="sd">            (</span>
+<span class="sd">              &quot;id&quot;     INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,</span>
+<span class="sd">              &quot;source&quot; TEXT NOT NULL,</span>
+<span class="sd">              &quot;envos&quot;  BLOB NOT NULL &lt;- marshaled tuple of ints</span>
+<span class="sd">            );</span>
+<span class="sd">        CREATE VIEW &quot;data&quot; AS SELECT gi.id, (-&gt;source), gi.pubmed, (-&gt;envos) from &quot;gi&quot;;</span>
+<span class="sd">        CREATE INDEX &quot;gi_index&quot; on &quot;gi&quot; (id);</span>
+<span class="sd">        CREATE INDEX &quot;isolation_index&quot; on &quot;isolation&quot; (source);</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="s2">&quot;--&gt; STEP 5: Setting up the SQLite3 database connection.&quot;</span>
+        <span class="n">path</span>     <span class="o">=</span> <span class="n">module_dir</span> <span class="o">+</span> <span class="s1">&#39;data_sources/gi_db.sqlite3&#39;</span>
+        <span class="n">drop_box</span> <span class="o">=</span> <span class="s2">&quot;qPBOyJXMAqoXysGANj73auUItrECVHo0peqW1U51Kk1xnZp1zMf00cfBbn7Zqlql&quot;</span>
+        <span class="n">retrieve</span> <span class="o">=</span> <span class="s2">&quot;https://dl.dropboxusercontent.com/content_link/</span><span class="si">%s</span><span class="s2">/file?dl=1&quot;</span> <span class="o">%</span> <span class="n">drop_box</span>
+        <span class="n">md5</span>      <span class="o">=</span> <span class="s2">&quot;bda6297a8cc6219836ed1cb118e03510&quot;</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">Database</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">retrieve</span><span class="o">=</span><span class="n">retrieve</span><span class="p">,</span> <span class="n">md5</span><span class="o">=</span><span class="n">md5</span><span class="p">,</span> <span class="n">text_fact</span><span class="o">=</span><span class="nb">bytes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_elapsed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">database</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">gis_with_envo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A set containing every GI that was found and that had some envo numbers associated.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">gi</span> <span class="k">for</span> <span class="n">gi</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique_gis</span> <span class="k">if</span> <span class="n">gi</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">seq_to_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary linking every input sequence to its summed normalized concept</span>
+<span class="sd">        counts dict, provided the input sequence had some hits, and at least one hit had</span>
+<span class="sd">        some envo number associated. Otherwise it is absent.</span>
+<span class="sd">        NB: What we want to account for is the fact that two GIs originating from the</span>
+<span class="sd">        same sequence could be pointing to the same isolation source.</span>
+<span class="sd">        In such case, we shall count the envo numbers from that isolation source only once.</span>
+<span class="sd">        We can also avoid counting two GIs that are coming from the same study, if a pubmed</span>
+<span class="sd">        number is available.&quot;&quot;&quot;</span>
+        <span class="c1"># Message #</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Got </span><span class="si">%i</span><span class="s2"> GI hits and </span><span class="si">%i</span><span class="s2"> of them had one for more EnvO terms associated.&quot;</span>
+        <span class="k">print</span> <span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unique_gis</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gis_with_envo</span><span class="p">))</span>
+        <span class="c1"># Step 5 #</span>
+        <span class="k">print</span> <span class="s2">&quot;--&gt; STEP 6: Computing EnvO term frequencies.&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Useful later #</span>
+        <span class="n">gi_to_key</span>    <span class="o">=</span> <span class="k">lambda</span> <span class="n">gi</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gi&quot;</span><span class="p">,</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="n">gi</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">gi_to_pub</span>    <span class="o">=</span> <span class="k">lambda</span> <span class="n">gi</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gi&quot;</span><span class="p">,</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="n">gi</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">key_to_envos</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">key</span><span class="p">:</span> <span class="n">marshal</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;isolation&quot;</span><span class="p">,</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="n">key</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">first_key</span>    <span class="o">=</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">,</span><span class="n">k</span><span class="p">:</span> <span class="p">[(</span><span class="n">gi</span><span class="p">,</span> <span class="n">knp</span><span class="p">)</span> <span class="k">for</span> <span class="n">gi</span><span class="p">,</span> <span class="n">knp</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>  <span class="k">if</span> <span class="n">knp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">first_pub</span>    <span class="o">=</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">,</span><span class="n">p</span><span class="p">:</span> <span class="p">[(</span><span class="n">gi</span><span class="p">,</span> <span class="n">knp</span><span class="p">)</span> <span class="k">for</span> <span class="n">gi</span><span class="p">,</span> <span class="n">knp</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">knp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">p</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># &quot;Flat&quot; or &quot;Unique source&quot; are quite similar #</span>
+        <span class="n">set_or_list</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">==</span> <span class="s1">&#39;flat&#39;</span><span class="p">:</span> <span class="n">set_or_list</span> <span class="o">=</span> <span class="nb">list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">==</span> <span class="s1">&#39;ui&#39;</span><span class="p">:</span>   <span class="n">set_or_list</span> <span class="o">=</span> <span class="nb">set</span>
+        <span class="c1"># It&#39;s just about using a list or a set in the right place #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">==</span> <span class="s1">&#39;flat&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">==</span> <span class="s1">&#39;ui&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">seq</span><span class="p">,</span> <span class="n">gis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_to_gis</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">isokeys</span>   <span class="o">=</span> <span class="p">(</span><span class="n">gi_to_key</span><span class="p">(</span><span class="n">gi</span><span class="p">)</span> <span class="k">for</span> <span class="n">gi</span> <span class="ow">in</span> <span class="n">gis</span> <span class="k">if</span> <span class="n">gi</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+                <span class="n">isokeys</span>   <span class="o">=</span> <span class="n">set_or_list</span><span class="p">(</span><span class="n">isokeys</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">isokeys</span><span class="p">:</span> <span class="k">continue</span>
+                <span class="n">all_envos</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">isokeys</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">key_to_envos</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proportional</span><span class="p">:</span> <span class="n">score</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">all_envos</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>                 <span class="n">score</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="n">counts</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">all_envos</span><span class="p">:</span> <span class="n">counts</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">+=</span> <span class="n">score</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span>
+        <span class="c1"># Unique source and unique pubmed #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">==</span> <span class="s1">&#39;uiup&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">seq</span><span class="p">,</span> <span class="n">gis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_to_gis</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">gis_w_envo</span> <span class="o">=</span> <span class="p">[</span><span class="n">gi</span> <span class="k">for</span> <span class="n">gi</span> <span class="ow">in</span> <span class="n">gis</span> <span class="k">if</span> <span class="n">gi</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">gis_w_envo</span><span class="p">:</span> <span class="k">continue</span>
+                <span class="n">gi_to_knp</span>  <span class="o">=</span> <span class="p">{</span><span class="n">gi</span><span class="p">:</span> <span class="p">(</span><span class="n">gi_to_key</span><span class="p">(</span><span class="n">gi</span><span class="p">),</span> <span class="n">gi_to_pub</span><span class="p">(</span><span class="n">gi</span><span class="p">))</span> <span class="k">for</span> <span class="n">gi</span> <span class="ow">in</span> <span class="n">gis_w_envo</span><span class="p">}</span>
+                <span class="n">uniq_keys</span>  <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">pub</span> <span class="ow">in</span> <span class="n">gi_to_knp</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                <span class="n">gi2knp_uk</span>  <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">first_key</span><span class="p">(</span><span class="n">gi_to_knp</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">uniq_keys</span><span class="p">)</span>
+                <span class="n">pubmeds</span>    <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">pub</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">pub</span> <span class="ow">in</span> <span class="n">gi2knp_uk</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                <span class="n">gi2knp_up</span>  <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">first_pub</span><span class="p">(</span><span class="n">gi_to_knp</span><span class="p">,</span> <span class="n">pubmed</span><span class="p">)</span> <span class="k">for</span> <span class="n">pubmed</span> <span class="ow">in</span> <span class="n">pubmeds</span><span class="p">)</span>
+                <span class="n">all_envos</span>  <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">pub</span> <span class="ow">in</span> <span class="n">gi2knp_up</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">key_to_envos</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proportional</span><span class="p">:</span> <span class="n">score</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">all_envos</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>                 <span class="n">score</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="n">counts</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">all_envos</span><span class="p">:</span> <span class="n">counts</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">+=</span> <span class="n">score</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span>
+        <span class="c1"># Check #</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;We found no isolation sources with your input. Sorry.&quot;</span><span class="p">)</span>
+        <span class="c1"># Return #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">print_elapsed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># serial_to_concept</span>
+    <span class="c1"># child_to_parents</span>
+    <span class="c1"># concept_to_name</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">serial_to_concept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary linking every concept serial to its concept id.</span>
+<span class="sd">        Every line in the file contains three columns: serial, concept_type, concept_id.</span>
+<span class="sd">        An example line: 1007000022 -27 ENVO:00000021&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">module_dir</span> <span class="o">+</span> <span class="s1">&#39;data_envo/envo_entities.tsv&#39;</span><span class="p">))</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">child_to_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary linking every concept id to a list of parent concept ids.</span>
+<span class="sd">        Every line in the file contains two columns: child_serial, parent_serial</span>
+<span class="sd">        An example line: 1007000003 1007001640&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">module_dir</span> <span class="o">+</span> <span class="s1">&#39;data_envo/envo_groups.tsv&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">handle</span><span class="p">:</span>
+                <span class="n">child_serial</span><span class="p">,</span> <span class="n">parent_serial</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="n">child_concept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serial_to_concept</span><span class="p">[</span><span class="n">child_serial</span><span class="p">]</span>
+                <span class="n">parent_concept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serial_to_concept</span><span class="p">[</span><span class="n">parent_serial</span><span class="p">]</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">child_concept</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parent_concept</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">concept_to_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary linking the concept id to relevant names. In this case ENVO terms.</span>
+<span class="sd">        Hence, ENVO:00000095 would be linked to &#39;lava field&#39;</span>
+<span class="sd">        An example line: ENVO:00000015  ocean&quot;&quot;&quot;</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">module_dir</span> <span class="o">+</span> <span class="s1">&#39;data_envo/envo_preferred.tsv&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">envo</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">envo</span> <span class="o">==</span> <span class="s2">&quot;ENVO:root&quot;</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">result</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">envo</span><span class="p">[</span><span class="mi">5</span><span class="p">:])]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

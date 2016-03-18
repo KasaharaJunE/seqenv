@@ -1,0 +1,200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.seqsearch.blast &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="../../../index.html" />
+    <link rel="up" title="seqenv.seqsearch" href="../seqsearch.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seqenv.seqsearch.blast</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Futures #</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="c1"># Built-in modules #</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">multiprocessing</span><span class="o">,</span> <span class="nn">threading</span><span class="o">,</span> <span class="nn">shutil</span>
+
+<span class="c1"># Internal modules #</span>
+<span class="kn">from</span> <span class="nn">seqenv.fasta</span> <span class="kn">import</span> <span class="n">FASTA</span>
+<span class="kn">from</span> <span class="nn">seqenv.common</span> <span class="kn">import</span> <span class="n">new_temp_path</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.autopaths</span> <span class="kn">import</span> <span class="n">FilePath</span>
+
+<span class="c1"># Third party modules #</span>
+<span class="kn">import</span> <span class="nn">sh</span>
+
+<span class="c1">###############################################################################</span>
+<div class="viewcode-block" id="BLASTquery"><a class="viewcode-back" href="../../../seqenv.seqsearch.html#seqenv.seqsearch.blast.BLASTquery">[docs]</a><span class="k">class</span> <span class="nc">BLASTquery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A blast job. Possibly the standard BLAST algorithm or</span>
+<span class="sd">       BLASTP or BLASTX etc. Typically you could use it like this:</span>
+
+<span class="sd">            import sys, os</span>
+<span class="sd">            records_path = os.path.expanduser(sys.argv[1])</span>
+<span class="sd">            centers_path = &#39;centers.fasta&#39;</span>
+<span class="sd">            db = parallelblast.BLASTdb(centers_path)</span>
+<span class="sd">            db.makeblastdb()</span>
+<span class="sd">            params = {&#39;executable&#39;: &quot;~/share/blastplus/blastn&quot;,</span>
+<span class="sd">                      &#39;-outfmt&#39;: 0,</span>
+<span class="sd">                      &#39;-evalue&#39;: 1e-2,</span>
+<span class="sd">                      &#39;-perc_identity&#39;: 97,</span>
+<span class="sd">                      &#39;-num_threads&#39;: 16}</span>
+<span class="sd">            search = parallelblast.BLASTquery(records_path, db, params)</span>
+<span class="sd">            search.run()</span>
+
+<span class="sd">       You can also call search.non_block_run() to run maybe searches in parallel.</span>
+<span class="sd">       &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_path</span><span class="p">,</span> <span class="n">db_path</span><span class="p">,</span>
+                 <span class="n">params</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                 <span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;blastn&quot;</span><span class="p">,</span>
+                 <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;plus&quot;</span> <span class="ow">or</span> <span class="s2">&quot;legacy&quot;</span><span class="p">,</span>
+                 <span class="n">out_path</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                 <span class="n">executable</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="c1"># Save attributes #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">query_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="n">FASTA</span><span class="p">(</span><span class="n">query_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">FilePath</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span> <span class="k">if</span> <span class="n">params</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">executable</span> <span class="o">=</span> <span class="n">FilePath</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+        <span class="c1"># Output #</span>
+        <span class="k">if</span> <span class="n">out_path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">prefix_path</span> <span class="o">+</span> <span class="s1">&#39;.blastout&#39;</span>
+        <span class="k">elif</span> <span class="n">out_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span> <span class="o">=</span> <span class="n">out_path</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;.blastout&#39;</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span> <span class="o">=</span> <span class="n">out_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span> <span class="o">=</span> <span class="n">FilePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">)</span>
+        <span class="c1"># Defaults #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cpus</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s1">&#39;plus&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;-num_threads&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;-num_threads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpus</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s1">&#39;legacy&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;-a&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;-a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpus</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Executable #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">:</span> <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">path</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s1">&#39;legacy&#39;</span><span class="p">:</span> <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;blastall&quot;</span><span class="p">,</span> <span class="s1">&#39;-p&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">]</span>
+        <span class="c1"># Essentials #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s1">&#39;legacy&#39;</span><span class="p">:</span> <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;-d&#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="s1">&#39;-i&#39;</span><span class="p">,</span>     <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span>   <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s1">&#39;plus&#39;</span><span class="p">:</span>   <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;-db&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="s1">&#39;-query&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">,</span> <span class="s1">&#39;-out&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">]</span>
+        <span class="c1"># Options #</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span>
+        <span class="c1"># Return #</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BLASTquery.run"><a class="viewcode-back" href="../../../seqenv.seqsearch.html#seqenv.seqsearch.blast.BLASTquery.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sh</span><span class="o">.</span><span class="n">Command</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">])(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;error.log&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="s2">&quot;error.log&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;error.log&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BLASTquery.non_block_run"><a class="viewcode-back" href="../../../seqenv.seqsearch.html#seqenv.seqsearch.blast.BLASTquery.non_block_run">[docs]</a>    <span class="k">def</span> <span class="nf">non_block_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Special method to run the query in a thread without blocking.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BLASTquery.wait"><a class="viewcode-back" href="../../../seqenv.seqsearch.html#seqenv.seqsearch.blast.BLASTquery.wait">[docs]</a>    <span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If you have run the query in a non-blocking way, call this method to pause</span>
+<span class="sd">        until the query is finished.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BLASTquery.filter"><a class="viewcode-back" href="../../../seqenv.seqsearch.html#seqenv.seqsearch.blast.BLASTquery.filter">[docs]</a>    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filtering</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;We can do some special filtering on the results. For the moment only minimum coverage.&quot;&quot;&quot;</span>
+        <span class="c1"># Conditions #</span>
+        <span class="k">if</span> <span class="s1">&#39;min_coverage&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filtering</span><span class="p">:</span> <span class="k">return</span>
+        <span class="k">if</span> <span class="s1">&#39;qcovs&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;-outfmt&#39;</span><span class="p">]:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">()</span>
+        <span class="c1"># Iterator #</span>
+        <span class="k">def</span> <span class="nf">filter_lines</span><span class="p">(</span><span class="n">blastout</span><span class="p">):</span>
+            <span class="n">threshold</span> <span class="o">=</span> <span class="n">filtering</span><span class="p">[</span><span class="s1">&#39;min_coverage&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;-outfmt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;qcovs&#39;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">blastout</span><span class="p">:</span>
+                <span class="n">coverage</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">position</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">coverage</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span> <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span> <span class="k">yield</span> <span class="n">line</span>
+        <span class="c1"># Do it #</span>
+        <span class="n">temp_path</span> <span class="o">=</span> <span class="n">new_temp_path</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">temp_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="n">handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">filter_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">temp_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the results.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">:</span> <span class="k">yield</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../seqsearch.html">seqenv.seqsearch</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.common.autopaths &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="../../../index.html" />
+    <link rel="up" title="seqenv.common" href="../common.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seqenv.common.autopaths</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Built-in modules #</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sh</span><span class="o">,</span> <span class="nn">glob</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">stat</span>
+
+<span class="c1"># Internal modules #</span>
+<span class="kn">from</span> <span class="nn">seqenv.common</span> <span class="kn">import</span> <span class="n">unzip</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.cache</span> <span class="kn">import</span> <span class="n">property_cached</span>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="DirectoryPath"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.DirectoryPath">[docs]</a><span class="k">class</span> <span class="nc">DirectoryPath</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> object &quot;</span><span class="si">%s</span><span class="s1">&quot;&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DirectoryPath.clean_path"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.DirectoryPath.clean_path">[docs]</a>    <span class="k">def</span> <span class="nf">clean_path</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given a path, return a cleaned up version for initialization.&quot;&quot;&quot;</span>
+        <span class="c1"># Conserve &#39;None&#39; object style #</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="bp">None</span>
+        <span class="c1"># Don&#39;t nest DirectoryPaths or the like #</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;path&#39;</span><span class="p">):</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">path</span>
+        <span class="c1"># Expand the tilda #</span>
+        <span class="k">if</span> <span class="s2">&quot;~&quot;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span> <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="c1"># Our standard is to end with a slash for directories #</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span> <span class="n">path</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span>
+        <span class="c1"># Return the result #</span>
+        <span class="k">return</span> <span class="n">path</span></div>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A DirectoryPath is in fact a string&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">clean_path</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clean_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just the directory name&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Does it exist in the file system?&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">lexists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="c1"># Include broken symlinks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">absolute_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The absolute path starting with a `/`&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_symlink</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is this directory a symbolic link to an other directory?&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">islink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The full path of directory containing this one&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DirectoryPath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">permissions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convenience object for dealing with permissions.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FilePermissions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DirectoryPath.remove"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.DirectoryPath.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span> <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_when_symlink</span><span class="p">()</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="DirectoryPath.remove_when_symlink"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.DirectoryPath.remove_when_symlink">[docs]</a>    <span class="k">def</span> <span class="nf">remove_when_symlink</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span> <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="DirectoryPath.create"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.DirectoryPath.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">inherit</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="c1"># Create it #</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">safe</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">inherit</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="o">.</span><span class="n">permissions</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">safe</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">inherit</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="o">.</span><span class="n">permissions</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span></div></div>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="FilePath"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath">[docs]</a><span class="k">class</span> <span class="nc">FilePath</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;I can never remember all those darn `os.path` commands, so I made a class</span>
+<span class="sd">    that wraps them with an easier and more pythonic syntax.</span>
+
+<span class="sd">        path = FilePath(&#39;/home/root/text.txt&#39;)</span>
+<span class="sd">        print path.extension</span>
+<span class="sd">        print path.directory</span>
+<span class="sd">        print path.filename</span>
+
+<span class="sd">    You can find lots of the common things you would need to do with file paths.</span>
+<span class="sd">    Such as: path.make_executable() etc etc.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A FilePath is in fact a string&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">clean_path</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clean_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_lines</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FilePath.clean_path"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath.clean_path">[docs]</a>    <span class="k">def</span> <span class="nf">clean_path</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given a path, return a cleaned up version for initialization&quot;&quot;&quot;</span>
+        <span class="c1"># Conserve None object style #</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="bp">None</span>
+        <span class="c1"># Don&#39;t nest FilePaths or the like #</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;path&#39;</span><span class="p">):</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">path</span>
+        <span class="c1"># Expand tilda #</span>
+        <span class="k">if</span> <span class="s2">&quot;~&quot;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span> <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="c1"># Expand star #</span>
+        <span class="k">if</span> <span class="s2">&quot;*&quot;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Found exactly no files matching &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Found several files matching &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Return the result #</span>
+        <span class="k">return</span> <span class="n">path</span></div>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">count_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">sh</span><span class="o">.</span><span class="n">wc</span><span class="p">(</span><span class="s1">&#39;-l&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Does it exist in the file system. Returns True or False.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">lexists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prefix_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The full path without the (last) extension and trailing period&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just the filename without the (last) extension and trailing period&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_path</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just the filename with the extension&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The extension with the leading period&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">absolute_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The absolute path starting with a `/`&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The directory containing this file&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="k">return</span> <span class="n">DirectoryPath</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DirectoryPath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">count_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The number of bytes&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FilePath.remove"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span> <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="FilePath.write"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contents</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FilePath.writelines"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath.writelines">[docs]</a>    <span class="k">def</span> <span class="nf">writelines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contents</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="n">handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FilePath.must_exist"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath.must_exist">[docs]</a>    <span class="k">def</span> <span class="nf">must_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raise an exception if the path doesn&#39;t exist.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The file path &#39;</span><span class="si">%s</span><span class="s2">&#39; does not exist.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Human readable file size&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Filesize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count_bytes</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FilePath.link_from"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath.link_from">[docs]</a>    <span class="k">def</span> <span class="nf">link_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a link here pointing to another file somewhere else.</span>
+<span class="sd">        The destination is hence self.path and the source is *path*.&quot;&quot;&quot;</span>
+        <span class="c1"># Get source and destination #</span>
+        <span class="n">source</span>      <span class="o">=</span> <span class="n">path</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+        <span class="c1"># Do it #</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">safe</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">destination</span><span class="p">):</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+        <span class="c1"># Do it safely #</span>
+        <span class="k">if</span> <span class="n">safe</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span>
+            <span class="k">try</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="FilePath.link_to"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath.link_to">[docs]</a>    <span class="k">def</span> <span class="nf">link_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a link somewhere else pointing to this file.</span>
+<span class="sd">        The destination is hence *path* and the source is self.path.&quot;&quot;&quot;</span>
+        <span class="c1"># Get source and destination #</span>
+        <span class="k">if</span> <span class="n">absolute</span><span class="p">:</span> <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">absolute_path</span>
+        <span class="k">else</span><span class="p">:</span>        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="c1"># Do it #</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">safe</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">destination</span><span class="p">):</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+        <span class="c1"># Do it safely #</span>
+        <span class="k">if</span> <span class="n">safe</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span>
+            <span class="k">try</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="FilePath.unzip_to"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath.unzip_to">[docs]</a>    <span class="k">def</span> <span class="nf">unzip_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+       <span class="sd">&quot;&quot;&quot;Make an unzipped version of the file at a given path&quot;&quot;&quot;</span>
+       <span class="k">return</span> <span class="n">unzip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span></div></div>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="FilePermissions"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePermissions">[docs]</a><span class="k">class</span> <span class="nc">FilePermissions</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Container for reading and setting a files permissions&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The permission bits as an octal integer&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">&amp;</span> <span class="mo">0777</span>
+
+<div class="viewcode-block" id="FilePermissions.make_executable"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePermissions.make_executable">[docs]</a>    <span class="k">def</span> <span class="nf">make_executable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IEXEC</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FilePermissions.only_readable"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePermissions.only_readable">[docs]</a>    <span class="k">def</span> <span class="nf">only_readable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove all writing privileges&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IRUSR</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IRGRP</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IROTH</span><span class="p">)</span></div></div>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="Filesize"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.Filesize">[docs]</a><span class="k">class</span> <span class="nc">Filesize</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Container for a size in bytes with a human readable representation</span>
+<span class="sd">    Use it like this:</span>
+
+<span class="sd">        &gt;&gt;&gt; size = Filesize(123123123)</span>
+<span class="sd">        &gt;&gt;&gt; print size</span>
+<span class="sd">        &#39;117.4 MiB&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">chunk</span>      <span class="o">=</span> <span class="mi">1000</span> <span class="c1"># Could be 1024 if you like old-style sizes</span>
+    <span class="n">units</span>      <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;bytes&#39;</span><span class="p">,</span> <span class="s1">&#39;KiB&#39;</span><span class="p">,</span> <span class="s1">&#39;MiB&#39;</span><span class="p">,</span> <span class="s1">&#39;GiB&#39;</span><span class="p">,</span> <span class="s1">&#39;TiB&#39;</span><span class="p">,</span> <span class="s1">&#39;PiB&#39;</span><span class="p">]</span>
+    <span class="n">precisions</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+
+    <span class="k">def</span> <span class="nf">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="s1">&#39;0 bytes&#39;</span>
+        <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">log</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk</span><span class="p">)),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Filesize.format"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.Filesize.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+        <span class="c1"># Input checking #</span>
+        <span class="k">if</span> <span class="n">unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Not a valid file size unit: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">unit</span><span class="p">)</span>
+        <span class="c1"># Special no plural case #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">unit</span> <span class="o">==</span> <span class="s1">&#39;bytes&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="s1">&#39;1 byte&#39;</span>
+        <span class="c1"># Compute #</span>
+        <span class="n">exponent</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="n">quotient</span>      <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk</span><span class="o">**</span><span class="n">exponent</span>
+        <span class="n">precision</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="p">[</span><span class="n">exponent</span><span class="p">]</span>
+        <span class="n">format_string</span> <span class="o">=</span> <span class="s1">&#39;{:.</span><span class="si">%s</span><span class="s1">f} {}&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+        <span class="c1"># Return a string #</span>
+        <span class="k">return</span> <span class="n">format_string</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">quotient</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../common.html">seqenv.common</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
