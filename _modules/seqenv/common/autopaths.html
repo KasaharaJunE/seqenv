@@ -121,7 +121,10 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">inherit</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="o">.</span><span class="n">permissions</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span></div></div>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DirectoryPath.create_if_not_exists"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.DirectoryPath.create_if_not_exists">[docs]</a>    <span class="k">def</span> <span class="nf">create_if_not_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">()</span></div></div>
 
 <span class="c1">################################################################################</span>
 <div class="viewcode-block" id="FilePath"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.autopaths.FilePath">[docs]</a><span class="k">class</span> <span class="nc">FilePath</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
@@ -204,8 +207,12 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The directory containing this file&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="k">return</span> <span class="n">DirectoryPath</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">DirectoryPath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="c1"># The built-in function #</span>
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="c1"># Maybe we need to go the absolute path way #</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">directory</span><span class="p">:</span> <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute_path</span><span class="p">)</span>
+        <span class="c1"># Return #</span>
+        <span class="k">return</span> <span class="n">DirectoryPath</span><span class="p">(</span><span class="n">directory</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">count_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

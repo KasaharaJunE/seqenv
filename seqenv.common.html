@@ -67,6 +67,11 @@
 <code class="descname">create</code><span class="sig-paren">(</span><em>safe=False</em>, <em>inherit=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#DirectoryPath.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.create" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="seqenv.common.autopaths.DirectoryPath.create_if_not_exists">
+<code class="descname">create_if_not_exists</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/autopaths.html#DirectoryPath.create_if_not_exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.create_if_not_exists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="attribute">
 <dt id="seqenv.common.autopaths.DirectoryPath.directory">
 <code class="descname">directory</code><a class="headerlink" href="#seqenv.common.autopaths.DirectoryPath.directory" title="Permalink to this definition">¶</a></dt>
@@ -290,6 +295,28 @@ Use it like this:</p>
 </div>
 <div class="section" id="module-seqenv.common.cache">
 <span id="seqenv-common-cache-module"></span><h2>seqenv.common.cache module<a class="headerlink" href="#module-seqenv.common.cache" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="seqenv.common.cache.cached">
+<code class="descclassname">seqenv.common.cache.</code><code class="descname">cached</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/cache.html#cached"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.cache.cached" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for functions evaluated only once.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="seqenv.common.cache.class_property">
+<em class="property">class </em><code class="descclassname">seqenv.common.cache.</code><code class="descname">class_property</code><a class="reference internal" href="_modules/seqenv/common/cache.html#class_property"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.cache.class_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">property</span></code></p>
+<p>You can use this like this:
+class Foo(object):</p>
+<blockquote>
+<div><p>&#64;class_property
+&#64;classmethod
+&#64;cached
+def bar(cls):</p>
+<blockquote>
+<div>return 1+1</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
 <dl class="function">
 <dt id="seqenv.common.cache.property_cached">
 <code class="descclassname">seqenv.common.cache.</code><code class="descname">property_cached</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seqenv/common/cache.html#property_cached"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seqenv.common.cache.property_cached" title="Permalink to this definition">¶</a></dt>

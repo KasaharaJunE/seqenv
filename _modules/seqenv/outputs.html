@@ -43,7 +43,9 @@
 
 <span class="c1"># Internal modules #</span>
 <span class="kn">import</span> <span class="nn">seqenv</span>
-<span class="kn">from</span> <span class="nn">seqenv.common.cache</span> <span class="kn">import</span> <span class="n">property_cached</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.cache</span>     <span class="kn">import</span> <span class="n">property_cached</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.autopaths</span> <span class="kn">import</span> <span class="n">DirectoryPath</span>
+<span class="kn">from</span> <span class="nn">seqenv.ontology</span>         <span class="kn">import</span> <span class="n">Ontology</span>
 
 <span class="c1"># Third party modules #</span>
 <span class="kn">import</span> <span class="nn">pandas</span>
@@ -67,6 +69,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">analysis</span> <span class="o">=</span> <span class="n">analysis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">a</span>        <span class="o">=</span> <span class="n">analysis</span>
 
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># make_all</span>
+    <span class="c1"># df_seqs_concepts</span>
+    <span class="c1"># df_sample_names</span>
+    <span class="c1"># ontology</span>
+
 <div class="viewcode-block" id="OutputGenerator.make_all"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.make_all">[docs]</a>    <span class="k">def</span> <span class="nf">make_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Let&#39;s generate all the files&quot;&quot;&quot;</span>
         <span class="c1"># General matrices #</span>
@@ -75,7 +83,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">list_sequence_concept</span><span class="p">()</span>
         <span class="c1"># Only in the with &#39;samples&#39; case #</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">abundances</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsv_samples_to_names</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">abundances</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">biom_output</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">abundances</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">biom_output</span><span class="p">()</span>
+        <span class="c1"># Graphical outputs #</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dot_files</span><span class="p">()</span></div>
 
     <span class="nd">@property_cached</span>
     <span class="k">def</span> <span class="nf">df_seqs_concepts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -85,21 +95,11 @@
         <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="c1"># Rename to original names #</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">renamed_to_orig</span><span class="p">)</span>
+        <span class="c1"># Rename envo integers to envo strings #</span>
+        <span class="n">envo_int_to_id</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="s2">&quot;ENVO:</span><span class="si">%08d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">envo_int_to_id</span><span class="p">)</span>
         <span class="c1"># Return</span>
         <span class="k">return</span> <span class="n">df</span>
-
-<div class="viewcode-block" id="OutputGenerator.tsv_seq_to_concepts"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.tsv_seq_to_concepts">[docs]</a>    <span class="k">def</span> <span class="nf">tsv_seq_to_concepts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;seq_to_concepts.tsv&quot;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A TSV matrix file containing the df_seqs_concepts matrix&quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
-            <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_seqs_concepts</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="n">float_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">float_format</span><span class="p">)</span>
-            <span class="n">handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">content</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="OutputGenerator.tsv_seq_to_names"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.tsv_seq_to_names">[docs]</a>    <span class="k">def</span> <span class="nf">tsv_seq_to_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;seq_to_names.tsv&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A TSV matrix file where we translate the concept to human readable names&quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_seqs_concepts</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">concept_to_name</span><span class="p">)</span>
-            <span class="n">content</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="n">float_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">float_format</span><span class="p">)</span>
-            <span class="n">handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">content</span><span class="p">)</span></div>
 
     <span class="nd">@property_cached</span>
     <span class="k">def</span> <span class="nf">df_sample_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -119,6 +119,32 @@
         <span class="n">df</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">df2</span><span class="p">)</span>
         <span class="c1"># Return</span>
         <span class="k">return</span> <span class="n">df</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">ontology</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The ontology instance (singleton).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Ontology</span><span class="p">()</span>
+
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># tsv_seq_to_concepts</span>
+    <span class="c1"># tsv_seq_to_names</span>
+    <span class="c1"># tsv_samples_to_names</span>
+    <span class="c1"># list_sequence_concept</span>
+    <span class="c1"># biom_output</span>
+    <span class="c1"># dot_files</span>
+
+<div class="viewcode-block" id="OutputGenerator.tsv_seq_to_concepts"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.tsv_seq_to_concepts">[docs]</a>    <span class="k">def</span> <span class="nf">tsv_seq_to_concepts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;seq_to_concepts.tsv&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A TSV matrix file containing the df_seqs_concepts matrix&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_seqs_concepts</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="n">float_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">float_format</span><span class="p">)</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">content</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OutputGenerator.tsv_seq_to_names"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.tsv_seq_to_names">[docs]</a>    <span class="k">def</span> <span class="nf">tsv_seq_to_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;seq_to_names.tsv&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A TSV matrix file where we translate the concept to human readable names&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_seqs_concepts</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">concept_to_name</span><span class="p">)</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="n">float_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">float_format</span><span class="p">)</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">content</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="OutputGenerator.tsv_samples_to_names"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.tsv_samples_to_names">[docs]</a>    <span class="k">def</span> <span class="nf">tsv_samples_to_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;samples_to_names.tsv&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A TSV matrix file with matrix above.&quot;&quot;&quot;</span>
@@ -151,12 +177,12 @@
                     <span class="n">line</span>         <span class="o">=</span> <span class="p">(</span><span class="n">seq_name</span><span class="p">,</span> <span class="n">envo_id</span><span class="p">,</span> <span class="n">concept_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">count_gis</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">concept_gis</span><span class="p">))</span>
                     <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OutputGenerator.biom_output"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.biom_output">[docs]</a>    <span class="k">def</span> <span class="nf">biom_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="OutputGenerator.biom_output"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.biom_output">[docs]</a>    <span class="k">def</span> <span class="nf">biom_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;samples.biom&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The same matrix as the user gave in the abundance file, but with source</span>
 <span class="sd">        information attached for every sequence.</span>
 <span class="sd">        See http://biom-format.org&quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">df_abundances</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="s1">&#39;samples.biom&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
             <span class="c1"># Basic #</span>
             <span class="n">sample_ids</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span>
             <span class="n">sample_md</span> <span class="o">=</span> <span class="bp">None</span>
@@ -171,6 +197,31 @@
             <span class="c1"># Output #</span>
             <span class="n">t</span> <span class="o">=</span> <span class="n">biom</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">Table</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">(),</span> <span class="n">sample_ids</span><span class="p">,</span> <span class="n">observation_ids</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="n">observation_md</span><span class="p">)</span>
             <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="s1">&#39;seqenv version </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="n">seqenv</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OutputGenerator.dot_files"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.dot_files">[docs]</a>    <span class="k">def</span> <span class="nf">dot_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generations of files that can be viewed in `graphviz`.</span>
+<span class="sd">        There is one dotfile per input sequence.&quot;&quot;&quot;</span>
+        <span class="c1"># The output directory #</span>
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">DirectoryPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="s1">&#39;graphviz/&#39;</span><span class="p">)</span>
+        <span class="n">directory</span><span class="o">.</span><span class="n">create_if_not_exists</span><span class="p">()</span>
+        <span class="c1"># Main loop #</span>
+        <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">seq_to_counts</span><span class="p">:</span>
+            <span class="n">dot_path</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="n">seq</span> <span class="o">+</span> <span class="s1">&#39;.dot&#39;</span>
+            <span class="n">pdf_path</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="n">seq</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">seq_to_counts</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ENVO:</span><span class="si">%08d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">k</span><span class="p">:</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">total</span>  <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="n">v</span><span class="o">/</span><span class="n">total</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">envos</span>  <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="n">graph</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ontology</span><span class="o">.</span><span class="n">get_subgraph</span><span class="p">(</span><span class="n">envos</span><span class="p">)</span>
+            <span class="n">graph</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ontology</span><span class="o">.</span><span class="n">add_weights</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+            <span class="n">graph</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ontology</span><span class="o">.</span><span class="n">add_style</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ontology</span><span class="o">.</span><span class="n">write_to_dot</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">dot_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ontology</span><span class="o">.</span><span class="n">add_legend</span><span class="p">(</span><span class="n">dot_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ontology</span><span class="o">.</span><span class="n">draw_to_pdf</span><span class="p">(</span><span class="n">dot_path</span><span class="p">,</span> <span class="n">pdf_path</span><span class="p">)</span></div>
+
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># output_3</span>
 
 <div class="viewcode-block" id="OutputGenerator.output_3"><a class="viewcode-back" href="../../seqenv.html#seqenv.outputs.OutputGenerator.output_3">[docs]</a>    <span class="k">def</span> <span class="nf">output_3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Possible output #3: the number of terms per OTU</span>

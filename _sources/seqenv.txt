@@ -21,6 +21,14 @@ seqenv.analysis module
     :undoc-members:
     :show-inheritance:
 
+seqenv.ontology module
+----------------------
+
+.. automodule:: seqenv.ontology
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 seqenv.outputs module
 ---------------------
 

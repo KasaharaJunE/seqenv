@@ -42,6 +42,17 @@
 <span class="kn">import</span> <span class="nn">inspect</span>
 
 <span class="c1">################################################################################</span>
+<div class="viewcode-block" id="cached"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.cache.cached">[docs]</a><span class="k">def</span> <span class="nf">cached</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator for functions evaluated only once.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">memoized</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">memoized</span><span class="p">,</span> <span class="s1">&#39;__cache__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">memoized</span><span class="o">.</span><span class="n">__cache__</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">memoized</span><span class="o">.</span><span class="n">__cache__</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">return</span> <span class="n">memoized</span></div>
+
+<span class="c1">################################################################################</span>
 <div class="viewcode-block" id="property_cached"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.cache.property_cached">[docs]</a><span class="k">def</span> <span class="nf">property_cached</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Decorator for properties evaluated only once.</span>
 <span class="sd">    It can be used to created a cached property like this:</span>
@@ -69,6 +80,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__cache__</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
     <span class="n">retrieve_from_cache</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">__doc__</span>
     <span class="k">return</span> <span class="nb">property</span><span class="p">(</span><span class="n">retrieve_from_cache</span><span class="p">,</span> <span class="n">overwrite_cache</span><span class="p">)</span></div>
+
+<span class="c1">###############################################################################</span>
+<div class="viewcode-block" id="class_property"><a class="viewcode-back" href="../../../seqenv.common.html#seqenv.common.cache.class_property">[docs]</a><span class="k">class</span> <span class="nc">class_property</span><span class="p">(</span><span class="nb">property</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;You can use this like this:</span>
+<span class="sd">        class Foo(object):</span>
+<span class="sd">            @class_property</span>
+<span class="sd">            @classmethod</span>
+<span class="sd">            @cached</span>
+<span class="sd">            def bar(cls):</span>
+<span class="sd">                return 1+1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">,</span> <span class="n">owner</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fget</span><span class="o">.</span><span class="n">__get__</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">owner</span><span class="p">)()</span></div>
 </pre></div>
 
           </div>

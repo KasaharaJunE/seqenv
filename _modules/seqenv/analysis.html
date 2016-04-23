@@ -51,7 +51,7 @@
 <span class="kn">from</span> <span class="nn">seqenv.fasta</span>              <span class="kn">import</span> <span class="n">FASTA</span>
 <span class="kn">from</span> <span class="nn">seqenv.outputs</span>            <span class="kn">import</span> <span class="n">OutputGenerator</span>
 <span class="kn">from</span> <span class="nn">seqenv.seqsearch.parallel</span> <span class="kn">import</span> <span class="n">ParallelSeqSearch</span>
-<span class="kn">from</span> <span class="nn">seqenv.common.cache</span>       <span class="kn">import</span> <span class="n">property_cached</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.cache</span>       <span class="kn">import</span> <span class="n">property_cached</span><span class="p">,</span> <span class="n">cached</span><span class="p">,</span> <span class="n">class_property</span>
 <span class="kn">from</span> <span class="nn">seqenv.common.timer</span>       <span class="kn">import</span> <span class="n">Timer</span>
 <span class="kn">from</span> <span class="nn">seqenv.common.autopaths</span>   <span class="kn">import</span> <span class="n">FilePath</span>
 <span class="kn">from</span> <span class="nn">seqenv.common.database</span>    <span class="kn">import</span> <span class="n">Database</span>
@@ -367,7 +367,7 @@
 <span class="sd">        We can also avoid counting two GIs that are coming from the same study, if a pubmed</span>
 <span class="sd">        number is available.&quot;&quot;&quot;</span>
         <span class="c1"># Message #</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Got </span><span class="si">%i</span><span class="s2"> GI hits and </span><span class="si">%i</span><span class="s2"> of them had one for more EnvO terms associated.&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Got </span><span class="si">%i</span><span class="s2"> GI hits and </span><span class="si">%i</span><span class="s2"> of them had one or more EnvO terms associated.&quot;</span>
         <span class="k">print</span> <span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unique_gis</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gis_with_envo</span><span class="p">))</span>
         <span class="c1"># Step 5 #</span>
         <span class="k">print</span> <span class="s2">&quot;--&gt; STEP 6: Computing EnvO term frequencies.&quot;</span>
@@ -389,6 +389,8 @@
                 <span class="n">isokeys</span>   <span class="o">=</span> <span class="n">set_or_list</span><span class="p">(</span><span class="n">isokeys</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">isokeys</span><span class="p">:</span> <span class="k">continue</span>
                 <span class="n">all_envos</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">isokeys</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">key_to_envos</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backtracking</span><span class="p">:</span>
+                    <span class="n">all_envos</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">all_envos</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_to_parents</span><span class="p">[</span><span class="n">e</span><span class="p">]])</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proportional</span><span class="p">:</span> <span class="n">score</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">all_envos</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>                 <span class="n">score</span> <span class="o">=</span> <span class="mf">1.0</span>
                 <span class="n">counts</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
@@ -405,6 +407,8 @@
                 <span class="n">pubmeds</span>    <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">pub</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">pub</span> <span class="ow">in</span> <span class="n">gi2knp_uk</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
                 <span class="n">gi2knp_up</span>  <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">first_pub</span><span class="p">(</span><span class="n">gi_to_knp</span><span class="p">,</span> <span class="n">pubmed</span><span class="p">)</span> <span class="k">for</span> <span class="n">pubmed</span> <span class="ow">in</span> <span class="n">pubmeds</span><span class="p">)</span>
                 <span class="n">all_envos</span>  <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">pub</span> <span class="ow">in</span> <span class="n">gi2knp_up</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">key_to_envos</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backtracking</span><span class="p">:</span>
+                    <span class="n">all_envos</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">all_envos</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_to_parents</span><span class="p">[</span><span class="n">e</span><span class="p">]])</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proportional</span><span class="p">:</span> <span class="n">score</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">all_envos</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>                 <span class="n">score</span> <span class="o">=</span> <span class="mf">1.0</span>
                 <span class="n">counts</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
@@ -421,29 +425,35 @@
     <span class="c1"># child_to_parents</span>
     <span class="c1"># concept_to_name</span>
 
-    <span class="nd">@property_cached</span>
-    <span class="k">def</span> <span class="nf">serial_to_concept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nd">@class_property</span>
+    <span class="nd">@classmethod</span>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">serial_to_concept</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A dictionary linking every concept serial to its concept id.</span>
 <span class="sd">        Every line in the file contains three columns: serial, concept_type, concept_id.</span>
 <span class="sd">        An example line: 1007000022 -27 ENVO:00000021&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">module_dir</span> <span class="o">+</span> <span class="s1">&#39;data_envo/envo_entities.tsv&#39;</span><span class="p">))</span>
 
-    <span class="nd">@property_cached</span>
-    <span class="k">def</span> <span class="nf">child_to_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A dictionary linking every concept id to a list of parent concept ids.</span>
+    <span class="nd">@class_property</span>
+    <span class="nd">@classmethod</span>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">child_to_parents</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary linking concept id to a list of parent concept ids.</span>
 <span class="sd">        Every line in the file contains two columns: child_serial, parent_serial</span>
 <span class="sd">        An example line: 1007000003 1007001640&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">module_dir</span> <span class="o">+</span> <span class="s1">&#39;data_envo/envo_groups.tsv&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">handle</span><span class="p">:</span>
                 <span class="n">child_serial</span><span class="p">,</span> <span class="n">parent_serial</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-                <span class="n">child_concept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serial_to_concept</span><span class="p">[</span><span class="n">child_serial</span><span class="p">]</span>
-                <span class="n">parent_concept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serial_to_concept</span><span class="p">[</span><span class="n">parent_serial</span><span class="p">]</span>
+                <span class="n">child_concept</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">serial_to_concept</span><span class="p">[</span><span class="n">child_serial</span><span class="p">]</span>
+                <span class="n">parent_concept</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">serial_to_concept</span><span class="p">[</span><span class="n">parent_serial</span><span class="p">]</span>
                 <span class="n">result</span><span class="p">[</span><span class="n">child_concept</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parent_concept</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="nd">@property_cached</span>
-    <span class="k">def</span> <span class="nf">concept_to_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nd">@class_property</span>
+    <span class="nd">@classmethod</span>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">concept_to_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A dictionary linking the concept id to relevant names. In this case ENVO terms.</span>
 <span class="sd">        Hence, ENVO:00000095 would be linked to &#39;lava field&#39;</span>
 <span class="sd">        An example line: ENVO:00000015  ocean&quot;&quot;&quot;</span>

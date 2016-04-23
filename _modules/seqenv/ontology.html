@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seqenv.ontology &mdash; seqenv  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="seqenv  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seqenv.ontology</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Built-in modules #</span>
+
+<span class="c1"># Internal modules #</span>
+<span class="kn">from</span> <span class="nn">seqenv</span> <span class="kn">import</span> <span class="n">module_dir</span>
+<span class="kn">from</span> <span class="nn">seqenv.common.cache</span> <span class="kn">import</span> <span class="n">property_cached</span>
+
+<span class="c1"># Third party modules #</span>
+<span class="kn">import</span> <span class="nn">sh</span><span class="o">,</span> <span class="nn">networkx</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span>
+
+<span class="c1"># A list of envos to help test this module #</span>
+<span class="n">test_envos</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ENVO:00000033&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ENVO:00000043&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ENVO:00000067&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ENVO:00000143&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ENVO:00000210&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ENVO:00000215&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ENVO:00000475&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">################################################################################</span>
+<div class="viewcode-block" id="Ontology"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology">[docs]</a><span class="k">class</span> <span class="nc">Ontology</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A object that gives you access to the graph (network with nodes and edges)</span>
+<span class="sd">    of the ENVO ontology from the OBO file&#39;s path.</span>
+
+<span class="sd">    Other libraries not used here that could be added:</span>
+<span class="sd">        * graphviz:   http://graphviz.readthedocs.org/en/latest/api.html#digraph</span>
+<span class="sd">        * pydot:      https://github.com/erocarrera/pydot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Give the path to the OBO file&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">path</span> <span class="o">=</span> <span class="n">module_dir</span> <span class="o">+</span> <span class="s1">&#39;data_envo/envo.obo&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># orange_obo</span>
+    <span class="c1"># goatools</span>
+    <span class="c1"># orange_network</span>
+    <span class="c1"># pygraphviz</span>
+    <span class="c1"># networkx</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">orange_obo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The ontology loaded by the `orange` library.</span>
+<span class="sd">        * http://orange.biolab.si</span>
+<span class="sd">        * http://orange-bioinformatics.readthedocs.org/en/latest/</span>
+<span class="sd">        * https://github.com/biolab/orange-bio</span>
+<span class="sd">        * https://bitbucket.org/biolab/orange-bioinformatics</span>
+<span class="sd">        To install: $ pip install Orange-Bioinformatics</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">orangecontrib.bio.ontology</span> <span class="kn">import</span> <span class="n">OBOOntology</span>
+        <span class="k">return</span> <span class="n">OBOOntology</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">goatools</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The network loaded into goatools&#39; format.</span>
+<span class="sd">        * https://github.com/tanghaibao/goatools</span>
+<span class="sd">        To install: $ pip install goatools</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">goatools</span> <span class="kn">import</span> <span class="n">obo_parser</span>
+        <span class="k">return</span> <span class="n">obo_parser</span><span class="o">.</span><span class="n">GODag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">orange_network</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The network converted to `orange network` format.</span>
+<span class="sd">        Doesn&#39;t seem to work until they update PyPI.</span>
+<span class="sd">        * https://bitbucket.org/biolab/orange-network/</span>
+<span class="sd">        * http://orange-network.readthedocs.org/en/latest/</span>
+<span class="sd">        To install: $ pip install orange-network</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orange_obo</span><span class="o">.</span><span class="n">to_network</span><span class="p">()</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">pygraphviz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The network converted to `pygraphviz` format.</span>
+<span class="sd">        * http://pygraphviz.github.io/documentation/pygraphviz-1.3rc1/</span>
+<span class="sd">        To install: $ pip install pygraphviz</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orange_obo</span><span class="o">.</span><span class="n">to_graphviz</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">g</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">g</span><span class="o">.</span><span class="n">is_strict</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">g</span>
+
+    <span class="nd">@property_cached</span>
+    <span class="k">def</span> <span class="nf">networkx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The network converted to `networkx` format.</span>
+<span class="sd">        Seems like it looses directionality.</span>
+<span class="sd">        * https://networkx.readthedocs.org/en/stable/</span>
+<span class="sd">        To install: $ pip install networkx</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orange_obo</span><span class="o">.</span><span class="n">to_networkx</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">networkx</span><span class="o">.</span><span class="n">is_directed_acyclic_graph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">g</span>
+
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># test</span>
+    <span class="c1"># get_subgraph</span>
+    <span class="c1"># add_weights</span>
+    <span class="c1"># draw_to_pdf</span>
+    <span class="c1"># write_to_dot</span>
+
+<div class="viewcode-block" id="Ontology.get_subgraph"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.get_subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">get_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">envos</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given a list of ENVO terms, get the subgraph that contains them all</span>
+<span class="sd">        and all their ancestors, up to the root.</span>
+<span class="sd">        Outputs a networkx DiGraph object.&quot;&quot;&quot;</span>
+        <span class="c1"># Testing mode #</span>
+        <span class="k">if</span> <span class="n">envos</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">envos</span> <span class="o">=</span> <span class="n">test_envos</span>
+        <span class="c1"># All nodes #</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">envos</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">networkx</span><span class="o">.</span><span class="n">descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">networkx</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">envos</span><span class="p">)</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="c1"># Return #</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">networkx</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Ontology.add_weights"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.add_weights">[docs]</a>    <span class="k">def</span> <span class="nf">add_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Input a networkx DiGraph object.</span>
+<span class="sd">        Outputs a pygraphviz AGraph object.&quot;&quot;&quot;</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">networkx</span><span class="o">.</span><span class="n">nx_agraph</span><span class="o">.</span><span class="n">to_agraph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="n">g</span>
+        <span class="k">for</span> <span class="n">envo</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">:</span>
+            <span class="n">node</span>   <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">envo</span><span class="p">)</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">envo</span><span class="p">]</span>
+            <span class="n">color</span>  <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">rgb2hex</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">weight</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;fillcolor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">color</span>
+        <span class="k">return</span> <span class="n">g</span></div>
+
+<div class="viewcode-block" id="Ontology.add_style"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.add_style">[docs]</a>    <span class="k">def</span> <span class="nf">add_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Input a pygraphviz AGraph object.</span>
+<span class="sd">        Outputs a pygraphviz AGraph object.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+            <span class="c1">#envo = node.attr[&#39;label&#39;]</span>
+            <span class="c1">#node.attr[&#39;label&#39;] = &quot;{&lt;f0&gt; %s|&lt;f1&gt; %s}&quot; % (envo, text)</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">n&#39;</span><span class="p">)</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Mrecord&#39;</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;style&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;filled&#39;</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">edge</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;located_in&#39;</span><span class="p">:</span> <span class="n">edge</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;turquoise4&#39;</span>
+            <span class="n">edge</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">g</span></div>
+
+<div class="viewcode-block" id="Ontology.write_to_dot"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.write_to_dot">[docs]</a>    <span class="k">def</span> <span class="nf">write_to_dot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Input a pygraphviz AGraph object.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Ontology.add_legend"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.add_legend">[docs]</a>    <span class="k">def</span> <span class="nf">add_legend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Input the path to a dot file.&quot;&quot;&quot;</span>
+        <span class="n">legend_txt</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        digraph {</span>
+<span class="s2">          rankdir=LR</span>
+<span class="s2">          node [shape=plaintext,fontname=&quot;helvetica&quot;]</span>
+<span class="s2">          subgraph cluster_01 {</span>
+<span class="s2">          label = &quot;NB: darker nodes weigh more&quot;;</span>
+<span class="s2">            key [label=&lt;&lt;table border=&quot;0&quot; cellpadding=&quot;2&quot; cellspacing=&quot;0&quot; cellborder=&quot;0&quot;&gt;</span>
+<span class="s2">              &lt;tr&gt;&lt;td align=&quot;right&quot; port=&quot;i1&quot;&gt;Is&lt;/td&gt;&lt;/tr&gt;</span>
+<span class="s2">              &lt;tr&gt;&lt;td align=&quot;right&quot; port=&quot;i2&quot;&gt;Part&lt;/td&gt;&lt;/tr&gt;</span>
+<span class="s2">              &lt;tr&gt;&lt;td align=&quot;right&quot; port=&quot;i3&quot;&gt;Located&lt;/td&gt;&lt;/tr&gt;</span>
+<span class="s2">              &lt;/table&gt;&gt;];</span>
+<span class="s2">            key2 [label=&lt;&lt;table border=&quot;0&quot; cellpadding=&quot;2&quot; cellspacing=&quot;0&quot; cellborder=&quot;0&quot;&gt;</span>
+<span class="s2">              &lt;tr&gt;&lt;td port=&quot;i1&quot;&gt;a&lt;/td&gt;&lt;/tr&gt;</span>
+<span class="s2">              &lt;tr&gt;&lt;td port=&quot;i2&quot;&gt;of&lt;/td&gt;&lt;/tr&gt;</span>
+<span class="s2">              &lt;tr&gt;&lt;td port=&quot;i3&quot;&gt;in&lt;/td&gt;&lt;/tr&gt;</span>
+<span class="s2">              &lt;/table&gt;&gt;];</span>
+<span class="s2">            key:i1:e -&gt; key2:i1:w [color=red];</span>
+<span class="s2">            key:i2:e -&gt; key2:i2:w [color=blue];</span>
+<span class="s2">            key:i3:e -&gt; key2:i3:w [color=turquoise4];</span>
+<span class="s2">        }&quot;&quot;&quot;</span>
+        <span class="n">orig_txt</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">line</span><span class="p">]</span>
+        <span class="n">new_text</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">legend_txt</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">line</span><span class="p">]</span>
+        <span class="n">new_text</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_text</span> <span class="o">+</span> <span class="n">orig_txt</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Ontology.draw_to_pdf"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.draw_to_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">draw_to_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_path</span><span class="p">,</span> <span class="n">out_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Input a path to a dot file.&quot;&quot;&quot;</span>
+        <span class="n">sh</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">in_path</span><span class="p">,</span> <span class="s1">&#39;-Tpdf&#39;</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">out_path</span><span class="p">)</span></div>
+
+    <span class="c1"># --------------------------- In this section --------------------------- #</span>
+    <span class="c1"># print_test</span>
+    <span class="c1"># draw_with_networkx</span>
+    <span class="c1"># draw_with_pygraphviz</span>
+
+<div class="viewcode-block" id="Ontology.print_test"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.print_test">[docs]</a>    <span class="k">def</span> <span class="nf">print_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just a method to see a bit how the different libraries work.&quot;&quot;&quot;</span>
+        <span class="c1"># Test node #</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">e</span> <span class="o">=</span> <span class="n">test_envos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Goa #</span>
+        <span class="k">print</span> <span class="s2">&quot;Goa: &quot;</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">goatools</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+        <span class="c1"># Pygraphviz #</span>
+        <span class="k">print</span> <span class="s2">&quot;pygraphviz: &quot;</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">pygraphviz</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">pygraphviz</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">pygraphviz</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">pygraphviz</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="c1"># Networkx #</span>
+        <span class="kn">import</span> <span class="nn">networkx</span>
+        <span class="k">print</span> <span class="s2">&quot;networkx: &quot;</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">networkx</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">networkx</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">networkx</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">networkx</span><span class="o">.</span><span class="n">ancestors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">networkx</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>   <span class="c1"># same as predecessors</span>
+        <span class="k">print</span> <span class="n">networkx</span><span class="o">.</span><span class="n">descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">networkx</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="c1"># almost as child_to_parents</span></div>
+
+<div class="viewcode-block" id="Ontology.draw_with_networkx"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.draw_with_networkx">[docs]</a>    <span class="k">def</span> <span class="nf">draw_with_networkx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Input a networkx DiGraph object.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+        <span class="n">networkx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">pyplot</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Ontology.draw_with_pygraphviz"><a class="viewcode-back" href="../../seqenv.html#seqenv.ontology.Ontology.draw_with_pygraphviz">[docs]</a>    <span class="k">def</span> <span class="nf">draw_with_pygraphviz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Input a pygraphviz AGraph object.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span></div></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
