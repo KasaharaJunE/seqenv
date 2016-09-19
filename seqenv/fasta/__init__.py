@@ -2,7 +2,7 @@
 import gzip
 
 # Internal modules #
-from seqenv.common.cache import property_cached
+from seqenv.common.cache     import property_cached
 from seqenv.common.autopaths import FilePath
 
 # Third party modules #

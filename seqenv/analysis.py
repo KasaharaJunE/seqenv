@@ -8,7 +8,7 @@ import cPickle as pickle
 
 # Internal modules #
 from seqenv                    import module_dir, version_string, git_repo
-from seqenv.fasta              import FASTA
+from seqenv.fasta.autodetect   import fasta_or_fastq
 from seqenv.ontology           import Ontology
 from seqenv.outputs            import OutputGenerator
 from seqenv.seqsearch.parallel import ParallelSeqSearch
@@ -81,7 +81,7 @@ class Analysis(object):
     def __repr__(self): return '<Analysis object on "%s" with %i sequences>' % \
                         (self.input_file.filename, self.input_file.count)
 
-    def __init__(self, input_file,
+    def __init__(self, input_path,
                  seq_type      = 'nucl',
                  search_algo   = 'blast',
                  search_db     = 'nt',
@@ -98,7 +98,7 @@ class Analysis(object):
                  abundances    = None,
                  N             = None):
         # Base parameters #
-        self.input_file = FASTA(input_file)
+        self.input_file = fasta_or_fastq(input_path)
         self.input_file.must_exist()
         # Abundance file #
         self.abundances = FilePath(abundances)
@@ -178,9 +178,9 @@ class Analysis(object):
     def renamed_fasta(self):
         """Make a new fasta file where every name in the input FASTA file is replaced
         with "C1", "C2", "C3" etc. Returns this new FASTA file."""
-        renamed_fasta = FASTA(self.out_dir + 'renamed.fasta')
+        renamed_fasta = fasta_or_fastq(self.out_dir + 'renamed.' + self.input_file.extension)
         if renamed_fasta.exists: return renamed_fasta
-        print "--> STEP 1: Parse the input FASTA file."
+        print "--> STEP 1: Parse the input file."
         self.input_file.rename_sequences(renamed_fasta, self.orig_names_to_renamed)
         self.timer.print_elapsed()
         return renamed_fasta
@@ -201,7 +201,7 @@ class Analysis(object):
         # Parse it #
         N = int(self.N)
         # Create file #
-        only_top_fasta = FASTA(self.out_dir + 'top_seqs.fasta')
+        only_top_fasta = fasta_or_fastq(self.out_dir + 'top_seqs.' + self.renamed_fasta.extension)
         # Print status #
         print "Using: " + self.renamed_fasta
         print "--> STEP 1B: Get the top %i sequences (in terms of their abundances)." % N

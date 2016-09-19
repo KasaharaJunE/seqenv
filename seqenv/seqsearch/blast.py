@@ -34,18 +34,18 @@ class BLASTquery(object):
        """
 
     def __init__(self, query_path, db_path,
-                 params = None,
-                 algorithm = "blastn",
-                 version = "plus" or "legacy",
-                 out_path = None,
+                 params     = None,
+                 algorithm  = "blastn",
+                 version    = "plus" or "legacy",
+                 out_path   = None,
                  executable = None):
         # Save attributes #
-        self.path = query_path
-        self.query = FASTA(query_path)
-        self.db = FilePath(db_path)
-        self.version = version
-        self.algorithm = algorithm
-        self.params = params if params else {}
+        self.path       = query_path
+        self.query      = FASTA(query_path)
+        self.db         = FilePath(db_path)
+        self.version    = version
+        self.algorithm  = algorithm
+        self.params     = params if params else {}
         self.executable = FilePath(executable)
         # Output #
         if out_path is None: self.out_path = self.query.prefix_path + '.blastout'

@@ -2,11 +2,11 @@
 import subprocess
 
 # Internal modules #
-from seqenv.seqsearch import SeqSearch
-from seqenv.seqsearch.blast import BLASTquery
+from seqenv.seqsearch         import SeqSearch
+from seqenv.seqsearch.blast   import BLASTquery
 from seqenv.seqsearch.vsearch import VSEARCHquery
-from seqenv.common.cache import property_cached
-from seqenv.fasta.splitable import SplitableFASTA
+from seqenv.common.cache      import property_cached
+from seqenv.fasta.splitable   import SplitableFASTA
 
 # Third party modules #
 

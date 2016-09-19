@@ -6,7 +6,8 @@ import os, sys, math, shutil
 
 # Internal modules #
 from seqenv.common.autopaths import DirectoryPath
-from seqenv.fasta import FASTA
+from seqenv.fasta            import FASTA
+from seqenv.fasta.fastq      import FASTQ
 
 # Third party modules #
 
@@ -29,10 +30,13 @@ class SplitableFASTA(FASTA):
             self.bytes_target = part_size #humanfriendly.parse_size(part_size)
             self.num_parts = int(math.ceil(self.count_bytes / self.bytes_target))
         # Make parts #
-        self.make_name = lambda i: self.base_dir + "%03d/part.fasta" % i
-        self.parts = [FASTA(self.make_name(i)) for i in range(1, self.num_parts+1)]
+        self.make_parts()
         # Give a number to each part #
         for i, part in enumerate(self.parts): part.num = i
+
+    def make_parts(self):
+        self.make_name = lambda i: self.base_dir + "%03d/part.fasta" % i
+        self.parts = [FASTA(self.make_name(i)) for i in range(1, self.num_parts+1)]
 
     @property
     def status(self):
@@ -62,3 +66,11 @@ class SplitableFASTA(FASTA):
         for seq in seqs: part.add_seq(seq)
         # Clean up #
         for part in self.parts: part.close()
+
+###############################################################################
+class SplitableFASTQ(SplitableFASTA, FASTQ):
+    """A FASTQ file which you can split into chunks."""
+
+    def make_parts(self):
+        self.make_name = lambda i: self.base_dir + "%03d/part.fastq" % i
+        self.parts = [FASTQ(self.make_name(i)) for i in range(1, self.num_parts+1)]
